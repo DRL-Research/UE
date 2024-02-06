@@ -1,17 +1,13 @@
-import numpy as np
 import time
 import pickle
-from sklearn.cluster import DBSCAN
 import airsim
-import dbscan_utils
-import spatial_utils
 import tracker_utils
 import camera_utils
 import path_control
 import os
 import cv2
 import struct
-
+from car_mapping import *
 
 decimation = 30e9  # Used to save an output image every X iterations.
 
@@ -91,6 +87,7 @@ def mapping_loop(client):
 
     idx = 0
     save_idx = 0
+    start_car_detecting = True
     while last_iteration - start_time < 300:
         now = time.perf_counter()
         delta_time = now - last_iteration
@@ -112,11 +109,12 @@ def mapping_loop(client):
                 if distance_from_start < entering_distance:
                     break
 
+
             # To minimize discrepancy between data sources, all acquisitions must be made before processing:
             responses = client.simGetImages([airsim.ImageRequest("LeftCam", 0, False, False),
                                              airsim.ImageRequest("RightCam", 0, False, False)])
 
-            lidar_data = client.getLidarData()
+            lidar_data = client.getLidarData(vehicle_name='Car1')
             pointcloud = np.array(lidar_data.point_cloud, dtype=np.dtype('f4'))
             pointcloud = pointcloud.reshape((int(pointcloud.shape[0] / 3), 3))
 
@@ -126,6 +124,30 @@ def mapping_loop(client):
 
             left_copy = np.copy(left_image)
             right_copy = np.copy(right_image)
+
+            if start_car_detecting:
+                # To detect car2 we need its real car2 location to be our y_true (ground-truth).
+                # we will use the data given from car1 lidar, so we will need to location of car2 referred to car1
+                # because the point data that we are getting from car1's lidar is relative to car1.
+
+                # get car1 position as given in config
+                car1_position_world_frame = client.simGetObjectPose('Car1').position
+                # get car2 position as given in config
+                car2_pos = client.simGetObjectPose('Car2')  # contain position + orientation
+                car2_position_world_frame = car2_pos.position
+                # get car2 (other) position referred to car1(self)
+                car2_position = get_other_position_ref_to_self(self_pos=car1_position_world_frame, other_pos=car2_position_world_frame)
+
+                # we want to test our experiments with different kinds of yaw & we don't want to do it HARD-CODDED
+                # we just need to set the yaw in the config & then we calculate it
+                car2_orientation = car2_pos.orientation
+                yaw = get_yaw_by_orientation(car2_orientation)
+
+                # start handle the data given from car1's lidar
+                car_detection(pointcloud, lidar_to_map, execution_time, curr_vel, yaw, other_true_pos=car2_position)
+                # for start we just want to do it at the beginning
+                start_car_detecting = False
+
 
             # DBSCAN filtering is done on the sensor-frame
             filtered_pc = dbscan_utils.filter_cloud(pointcloud, 3.0, 8.0, -0.5, 1.0)

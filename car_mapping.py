@@ -94,7 +94,5 @@ def run_ONE_dbscan_params_experiment(dbscan_model, lidar_to_map, execution_time,
 #   change car2 distance from car1 and then experiment
 #   move car2 to different static locations and run experiment
 
-print('check correction')
-
 
 
