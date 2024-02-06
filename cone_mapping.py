@@ -15,6 +15,8 @@ import struct
 
 decimation = 30e9  # Used to save an output image every X iterations.
 
+def say():
+    print('omri sleeps at DL')
 
 def aggregate_detections(airsim_client, iterations=1):
     pointcloud = np.array([])
