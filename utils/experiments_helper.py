@@ -62,7 +62,7 @@ def get_other_position_ref_to_self(self_pos, other_pos):
 # region DBSCAN
 
 
-def evaluate_and_save_dbscan_results(dbscan_model, prediction_location, err, yaw, agent_velocity):
+def evaluate_and_save_dbscan_results(dbscan_model, prediction_location, err, yaw, car1_velocity):
     path = 'car_mapping_experiments/dbscan_car_detection_experiments/'
     file_name = 'dbscan_car_detection_experiments.csv'
     eps = dbscan_model.eps
@@ -71,7 +71,7 @@ def evaluate_and_save_dbscan_results(dbscan_model, prediction_location, err, yaw
     num_clusters = len(unique_labels) - 1  # because label == -1 is for noise
     if prediction_location is not None:
         stats = {'Eps': eps, 'Min Samples': min_samples, 'Number Of Clusters Found': num_clusters,
-                 'Error': round(err, 3), 'Yaw': yaw, 'Speed': round(agent_velocity, 3),
+                 'Error': round(err, 3), 'Yaw': yaw, 'Velocity': car1_velocity,
                  'Predicted Location': prediction_location}
 
         save_results_to_csv(path + file_name, stats)

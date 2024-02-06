@@ -98,7 +98,7 @@ def mapping_loop(client):
             vehicle_to_map = spatial_utils.tf_matrix_from_airsim_object(vehicle_pose)
             map_to_vehicle = np.linalg.inv(vehicle_to_map)
             lidar_to_map = np.matmul(vehicle_to_map, lidar_to_vehicle)
-            car_state = client.getCarState()
+            car_state = client.getCarState('Car1')
             curr_vel = car_state.speed
 
             distance_from_start = np.linalg.norm(vehicle_to_map[0:2, 3])

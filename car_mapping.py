@@ -48,9 +48,9 @@ def run_dbscan_params_experiments(filtered_points_cloud, lidar_to_map, execution
         for min_samples in min_samples_candidates:
             # build a dbscan model -> make prediction -> evaluate results -> save results
             dbscan_candidate_model = DBSCAN(eps=eps, min_samples=min_samples).fit(filtered_points_cloud)
-            prediction_location, err = run_ONE_dbscan_params_experiment(dbscan_candidate_model, lidar_to_map, execution_time,
+            predicted_other_car_location, err = run_ONE_dbscan_params_experiment(dbscan_candidate_model, lidar_to_map, execution_time,
                                                                velocity, other_true_pos)
-            evaluate_and_save_dbscan_results(dbscan_candidate_model, prediction_location, err, yaw, velocity)
+            evaluate_and_save_dbscan_results(dbscan_candidate_model, predicted_other_car_location, err, yaw, velocity)
     print('-' * 100)
     print('Finished to run DBSCAN Experiments')
     print('-' * 100)
@@ -59,7 +59,6 @@ def run_dbscan_params_experiments(filtered_points_cloud, lidar_to_map, execution
 def run_ONE_dbscan_params_experiment(dbscan_model, lidar_to_map, execution_time, curr_vel, other_true_pos):
     curr_segments, airsim_curr_centroids, curr_labels = dbscan_utils.collate_segmentation(dbscan_model, 1.0)
     airsim_curr_centroids.sort(key=lambda x: np.linalg.norm(x))
-    close_dict = {}
     global_centroids = []
     # target
     car2_true_position = other_true_pos  # [0, -30, 0]
@@ -70,11 +69,10 @@ def run_ONE_dbscan_params_experiment(dbscan_model, lidar_to_map, execution_time,
         global_centroid = convert_airsim_point_to_global_point_using_lidar2map_tf(
             airsim_centroid, lidar_to_map, execution_time, curr_vel)
         global_centroids.append(global_centroid)
-    # compare candidates to target
 
-    global_car2_position_prediction, smallest_difference,  = None, -np.inf
-    for i in range(len(global_centroids)):
-        global_centroid = global_centroids[i]
+    # compare candidates to target
+    global_car2_position_prediction, smallest_difference,  = None, np.inf
+    for global_centroid in global_centroids:
         is_close_enough, difference = check_proximity_global(global_centroid, global_car2_true_position)
         if is_close_enough and difference < smallest_difference:
             global_car2_position_prediction, smallest_difference = global_centroid, difference
@@ -84,15 +82,9 @@ def run_ONE_dbscan_params_experiment(dbscan_model, lidar_to_map, execution_time,
 
 #
 # 1. add documentation in code & notion
-# 2. add speed of the car's
-# 3. check about the metrics, interesting the best prediction so change
-#    just to get the best prediction and not all the possible predictions
 # 4. add to notion the Project Goal's
 
-# 5. general:
-#   after that we will try more complex experiments like movement
-#   change car2 distance from car1 and then experiment
-#   move car2 to different static locations and run experiment
+# next: change
 
 
 
