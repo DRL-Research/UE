@@ -82,7 +82,7 @@ def run_ONE_dbscan_params_experiment(dbscan_model, lidar_to_map, execution_time,
     return global_car2_position_prediction, smallest_difference
 
 
-# 
+#
 # 1. add documentation in code & notion
 # 2. add speed of the car's
 # 3. check about the metrics, interesting the best prediction so change
@@ -94,7 +94,7 @@ def run_ONE_dbscan_params_experiment(dbscan_model, lidar_to_map, execution_time,
 #   change car2 distance from car1 and then experiment
 #   move car2 to different static locations and run experiment
 
-
+print('check correction')
 
 
 
