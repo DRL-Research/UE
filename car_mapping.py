@@ -41,8 +41,8 @@ def car_detection(points_cloud, lidar_to_map, execution_time, velocity, yaw, oth
 
 
 def run_dbscan_params_experiments(filtered_points_cloud, lidar_to_map, execution_time, velocity, yaw, other_true_pos):
-    eps_candidates = list(np.arange(0.1, 4.5, 0.1))  # min distance between two points to consider them neighbours
-    min_samples_candidates = list(np.arange(3, 10, 1))  # min number of neighbours to count as a core point
+    eps_candidates = [2.5] # list(np.arange(0.1, 4.5, 0.1))  # min distance between two points to consider them neighbours
+    min_samples_candidates = [3] # list(np.arange(3, 10, 1))  # min number of neighbours to count as a core point
 
     for eps in eps_candidates:
         for min_samples in min_samples_candidates:

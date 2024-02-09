@@ -125,7 +125,7 @@ def mapping_loop(client):
             left_copy = np.copy(left_image)
             right_copy = np.copy(right_image)
 
-            if start_car_detecting:
+            if start_car_detecting and now > 25:
                 # To detect car2 we need its real car2 location to be our y_true (ground-truth).
                 # we will use the data given from car1 lidar, so we will need to location of car2 referred to car1
                 # because the point data that we are getting from car1's lidar is relative to car1.
