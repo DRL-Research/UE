@@ -1,6 +1,8 @@
 import time
 import pickle
 import airsim
+import numpy as np
+
 import tracker_utils
 import camera_utils
 import path_control
@@ -101,6 +103,7 @@ def mapping_loop(client):
             car_state = client.getCarState('Car1')
             curr_vel = car_state.speed
 
+
             distance_from_start = np.linalg.norm(vehicle_to_map[0:2, 3])
             if not loop_trigger:
                 if distance_from_start > leaving_distance:
@@ -126,26 +129,24 @@ def mapping_loop(client):
             right_copy = np.copy(right_image)
 
             if start_car_detecting and now > 25:
-                # To detect car2 we need its real car2 location to be our y_true (ground-truth).
-                # we will use the data given from car1 lidar, so we will need to location of car2 referred to car1
-                # because the point data that we are getting from car1's lidar is relative to car1.
 
-                # get car1 position as given in config
-                car1_position_world_frame = client.simGetObjectPose('Car1').position
-                # get car2 position as given in config
-                car2_pos = client.simGetObjectPose('Car2')  # contain position + orientation
-                car2_position_world_frame = car2_pos.position
-                # get car2 (other) position referred to car1(self)
-                car2_position = get_other_position_ref_to_self(self_pos=car1_position_world_frame, other_pos=car2_position_world_frame)
+                # get car2 position as given in settings
+                car2_pos_and_oriantation = client.simGetObjectPose('Car2')  # contain position + orientation
+                car2_position = car2_pos_and_oriantation.position
+                car2_position_as_np_array = np.array([car2_position.x_val, car2_position.y_val, car2_position.z_val])
+                car2_position_eng, _ = spatial_utils.convert_eng_airsim(car2_position_as_np_array, [0, 0, 0])
+                # we will keep this to remember this is another way to get the correct position of car2:
+                # car2_also_location = spatial_utils.tf_matrix_from_airsim_object(car2_pos_and_oriantation)
+                # car2_also_location = car2_also_location[3, :3] == car2_position_eng
 
                 # we want to test our experiments with different kinds of yaw & we don't want to do it HARD-CODDED
-                # we just need to set the yaw in the config & then we calculate it
-                car2_orientation = car2_pos.orientation
+                # we just need to set the yaw in the settings & then we calculate it
+                car2_orientation = car2_pos_and_oriantation.orientation
                 yaw = get_yaw_by_orientation(car2_orientation)
 
                 # start handle the data given from car1's lidar
-                car_detection(pointcloud, lidar_to_map, execution_time, curr_vel, yaw, other_true_pos=car2_position)
-                # for start we just want to do it at the beginning
+                car_detection(pointcloud, lidar_to_map, execution_time, curr_vel, yaw, other_true_pos_eng=car2_position_eng)
+                # for start we just want to do it at the beginning once and then change the flag
                 start_car_detecting = False
 
 
