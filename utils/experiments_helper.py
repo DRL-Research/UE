@@ -11,7 +11,7 @@ import spatial_utils
 # region Geo & Coordinates
 
 
-def check_proximity(global_position_pred, global_true_pos, threshold=3):
+def check_proximity(global_position_pred, global_true_pos, threshold=1):
     difference = np.linalg.norm(global_true_pos - global_position_pred)
     if difference <= threshold:
         return True, difference

@@ -73,8 +73,11 @@ def run_ONE_dbscan_params_experiment(dbscan_model, lidar_to_map, execution_time,
         eng_global_centroids.append(eng_global_centroid)
 
     # compare candidates to target
+    other_car_eng_true_position = other_car_eng_true_position[:2]  # we dont care about Z-axis then we can remove it
     car2_eng_position_prediction, smallest_difference,  = None, np.inf
     for eng_global_centroid in eng_global_centroids:
+        # we dont care about Z-axis then we can remove it:
+        eng_global_centroid = eng_global_centroid[:2]
         is_close_enough, difference = check_proximity(eng_global_centroid, other_car_eng_true_position)
         if is_close_enough and difference < smallest_difference:
             car2_eng_position_prediction, smallest_difference = eng_global_centroid, difference
