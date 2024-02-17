@@ -20,11 +20,23 @@ def check_proximity(global_position_pred, global_true_pos, threshold=3):
 
 
 def get_yaw_by_orientation(orientation):
+    # Yaw Convention will be in AirSim because of Visualization:
+    # yaw == 0 -> car2 is heading x+
+    # yaw == 90 -> car2 is heading y+
+    # yaw == 180 -> car2 is heading x-
+    # yaw == 270 -> car2 is heading y-
+
     orientation = [orientation.x_val, orientation.y_val, orientation.z_val, orientation.w_val]
     rotator = Rotation.from_quat(orientation)
     euler_angles = rotator.as_euler(seq='ZYX', degrees=True)
     yaw = euler_angles[0]
-    return np.ceil(yaw)
+
+    if -1 <= yaw <= 1:
+        return 0
+    elif (-91 <= yaw <= -89) or (-181 <= yaw <= -179):
+        return int(yaw + 360)
+    else:
+        return np.ceil(yaw)
 
 
 def convert_airsim_point_to_global_point_using_lidar2map_tf(airsim_point, lidar_to_map, execution_time, curr_vel):
@@ -42,8 +54,8 @@ def convert_airsim_point_to_global_point_using_lidar2map_tf(airsim_point, lidar_
 
 
 def evaluate_and_save_dbscan_results(dbscan_model, prediction_location, err, yaw, car1_velocity):
-    path = 'car_mapping_experiments/dbscan_car_detection_experiments/'
-    file_name = 'dbscan_car_detection_experiments.csv'
+    path = 'car_mapping_experiments/dbscan_results/'
+    file_name = 'dbscan_results.csv'
     eps = dbscan_model.eps
     min_samples = dbscan_model.min_samples
     unique_labels = np.unique(dbscan_model.labels_)
@@ -68,4 +80,3 @@ def save_results_to_csv(path, results: dict):
         result_df = pd.DataFrame([results])
         updated_data = pd.concat([existing_data, result_df], ignore_index=True)
         updated_data.to_csv(path, index=False)
-

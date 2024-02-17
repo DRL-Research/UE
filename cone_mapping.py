@@ -69,7 +69,7 @@ def mapping_loop(client):
     shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
 
     # Initialize vehicle starting point
-    spatial_utils.set_airsim_pose(client, [0.0, 0.0], [90.0, 0, 0])
+    spatial_utils.set_airsim_pose(client, [0.0, 0.0], [0.0, 0, 0])
     time.sleep(1.0)
     car_controls = airsim.CarControls()
     car_controls.throttle = 0.2
@@ -121,6 +121,7 @@ def mapping_loop(client):
             pointcloud = np.array(lidar_data.point_cloud, dtype=np.dtype('f4'))
             pointcloud = pointcloud.reshape((int(pointcloud.shape[0] / 3), 3))
 
+
             # Save the images in memory
             left_image = camera_utils.get_bgr_image(responses[0])
             right_image = camera_utils.get_bgr_image(responses[1])
@@ -131,17 +132,20 @@ def mapping_loop(client):
             if start_car_detecting and now > 25:
 
                 # get car2 position as given in settings
-                car2_pos_and_oriantation = client.simGetObjectPose('Car2')  # contain position + orientation
-                car2_position = car2_pos_and_oriantation.position
+                car2_pos_and_orientation = client.simGetObjectPose('Car2')  # contain position + orientation
+                car2_position = car2_pos_and_orientation.position
                 car2_position_as_np_array = np.array([car2_position.x_val, car2_position.y_val, car2_position.z_val])
                 car2_position_eng, _ = spatial_utils.convert_eng_airsim(car2_position_as_np_array, [0, 0, 0])
+
+                # region Keep In Mind
                 # we will keep this to remember this is another way to get the correct position of car2:
                 # car2_also_location = spatial_utils.tf_matrix_from_airsim_object(car2_pos_and_oriantation)
                 # car2_also_location = car2_also_location[3, :3] == car2_position_eng
+                # endregion
 
                 # we want to test our experiments with different kinds of yaw & we don't want to do it HARD-CODDED
                 # we just need to set the yaw in the settings & then we calculate it
-                car2_orientation = car2_pos_and_oriantation.orientation
+                car2_orientation = car2_pos_and_orientation.orientation
                 yaw = get_yaw_by_orientation(car2_orientation)
 
                 # start handle the data given from car1's lidar

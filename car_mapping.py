@@ -8,18 +8,19 @@ import spatial_utils
 from experiments_helper import *
 from dbscan_utils import *
 
+yaw_mapping = {0: '^', 90: '>', 180: 'v', 270: '<'}
 
-def show_cloud(title, points_cloud: np.ndarray, save_path='car_mapping_experiments'):
-    x = points_cloud[:, 0]
-    y = points_cloud[:, 1]
-    # convert from airsim to global (points_cloud assume to be airsim)
-    x = points_cloud[:, 1] * -1
-    y = points_cloud[:, 0]
-    plt.scatter(x, y, marker='o', s=3)
-    plt.xlabel('x-axis')
-    plt.ylabel('y-axis')
-    plt.xlim([0, 50])
-    plt.ylim([-50, 50])
+def show_cloud(points_cloud_eng, yaw, save_path='car_mapping_experiments'):
+    yaw_description = yaw_mapping[yaw]
+    title = f'Points Cloud After Clustering yaw:{yaw} Face-Direction: {yaw_description}'
+    x = points_cloud_eng[:, 0]
+    y = points_cloud_eng[:, 1]
+    # x,y flip because of airsim coordinates
+    plt.scatter(y, x, marker='o', s=3)
+    plt.xlabel('Y-axis')
+    plt.ylabel('X-axis')
+    plt.xlim([-40, 40])
+    plt.ylim([-40, 40])
     plt.title(title)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
@@ -38,6 +39,8 @@ def car_detection(points_cloud, lidar_to_map, execution_time, velocity, yaw, oth
     filtered_points_cloud = dbscan_utils.filter_cloud(points_cloud, min_distance=min_distance_from_car1,
                               max_distance=max_distance_from_car1, min_height=-min_height_of_point,
                                                       max_height=max_height_of_point)
+
+
     # step 2: cluster cloud & save results
     run_dbscan_params_experiments(filtered_points_cloud, lidar_to_map, execution_time, velocity, yaw, other_true_pos_eng)
 
@@ -52,7 +55,7 @@ def run_dbscan_params_experiments(filtered_points_cloud, lidar_to_map, execution
             dbscan_candidate_model = DBSCAN(eps=eps, min_samples=min_samples).fit(filtered_points_cloud)
             predicted_other_car_location, err = run_ONE_dbscan_params_experiment(dbscan_candidate_model, lidar_to_map, execution_time,
                                                                                  velocity, other_true_pos_eng)
-            evaluate_and_save_dbscan_results(dbscan_candidate_model, predicted_other_car_location, err, yaw, velocity)
+            #evaluate_and_save_dbscan_results(dbscan_candidate_model, predicted_other_car_location, err, yaw, velocity)
     print('-' * 100)
     print('Finished to run DBSCAN Experiments')
     print('-' * 100)
@@ -77,5 +80,4 @@ def run_ONE_dbscan_params_experiment(dbscan_model, lidar_to_map, execution_time,
             car2_eng_position_prediction, smallest_difference = eng_global_centroid, difference
 
     return car2_eng_position_prediction, smallest_difference
-
 
