@@ -10,7 +10,8 @@ if __name__ == '__main__':
     steering_procedure_manager = path_control.SteeringProcManager()
     airsim_client = airsim.CarClient()
     airsim_client.confirmConnection()
-    airsim_client.enableApiControl(True)
+    airsim_client.enableApiControl(is_enabled=True, vehicle_name='Car1')
+    #airsim_client.enableApiControl(is_enabled=True, vehicle_name='Car2')
 
     # Detect the cones and spline points, and return their location:
     print('Starting on-the-fly cone mapping with constant speed and steering procedure.')

@@ -73,7 +73,13 @@ def mapping_loop(client):
     time.sleep(1.0)
     car_controls = airsim.CarControls()
     car_controls.throttle = 0.2
-    client.setCarControls(car_controls)
+    client.setCarControls(controls=car_controls, vehicle_name='Car1')
+
+    # moving car 2
+    # car2_controls = airsim.CarControls()
+    # car2_controls.throttle = 0.5
+    # client.setCarControls(controls=car2_controls, vehicle_name='Car2')
+
 
     # Initialize loop variables
     tracked_cones = []

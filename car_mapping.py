@@ -27,6 +27,30 @@ def show_cloud(points_cloud_eng, yaw, save_path='car_mapping_experiments'):
     fig_name = f'{title}.png'
     plt.savefig(os.path.join(save_path, fig_name))
     plt.show()
+    x = points_cloud_eng[:, 0]
+    y = points_cloud_eng[:, 1]
+
+
+def show_clusters(model, car2_position, eps, min_samples, points):
+    title = f"Clusters Found with Eps:{eps}, Min-Samples:{min_samples}"
+    centroids = []
+    labels = model.labels_
+    for label in np.unique(labels):
+        if label == -1:  # Noise points
+            continue
+        cluster_points = points[labels == label]
+        centroid = cluster_points.mean(axis=0)  # Centroid as mean of cluster points
+        centroids.append(centroid)
+
+    x = [centroid[0] for centroid in centroids]
+    y = [centroid[1] * -1 for centroid in centroids]
+    plt.scatter(y, x, marker='o', s=3)
+    plt.xlabel('Y-axis')
+    plt.ylabel('X-axis')
+    plt.xlim([-20, -10])
+    plt.ylim([23, 27])
+    plt.title(title)
+    plt.show()
 
 
 def car_detection(points_cloud, lidar_to_map, execution_time, velocity, yaw, other_true_pos_eng):
@@ -46,16 +70,18 @@ def car_detection(points_cloud, lidar_to_map, execution_time, velocity, yaw, oth
 
 
 def run_dbscan_params_experiments(filtered_points_cloud, lidar_to_map, execution_time, velocity, yaw, other_true_pos_eng):
-    eps_candidates = list(np.arange(0.1, 4.5, 0.1))  # min distance between two points to consider them neighbours
-    min_samples_candidates = list(np.arange(1, 10, 1))  # min number of neighbours to count as a core point
+    eps_candidates = [0.3, 0.4]#list(np.arange(0.1, 4.5, 0.1))  # min distance between two points to consider them neighbours
+    min_samples_candidates = [2, 3]#list(np.arange(1, 10, 1))  # min number of neighbours to count as a core point
 
     for eps in eps_candidates:
         for min_samples in min_samples_candidates:
             # build a dbscan model -> make prediction -> evaluate results -> save results
+            filtered_points_cloud[:, 2] = 0
             dbscan_candidate_model = DBSCAN(eps=eps, min_samples=min_samples).fit(filtered_points_cloud)
             predicted_other_car_location, err = run_ONE_dbscan_params_experiment(dbscan_candidate_model, lidar_to_map, execution_time,
                                                                                  velocity, other_true_pos_eng)
-            #evaluate_and_save_dbscan_results(dbscan_candidate_model, predicted_other_car_location, err, yaw, velocity)
+            #show_clusters(dbscan_candidate_model, other_true_pos_eng[:2], eps, min_samples, filtered_points_cloud)
+            evaluate_and_save_dbscan_results(dbscan_candidate_model, predicted_other_car_location, err, yaw, velocity)
     print('-' * 100)
     print('Finished to run DBSCAN Experiments')
     print('-' * 100)
