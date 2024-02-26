@@ -13,7 +13,7 @@ import csv
 import os
 
 
-def following_loop(client, spline_obj=None,execution_time=None,curr_vel=None,lidar_to_map=None):
+def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, transition_matrix=None):
     data_dest = os.path.join(os.getcwd(), 'recordings')
     os.makedirs(data_dest, exist_ok=True)
     save_data = False
@@ -74,11 +74,11 @@ def following_loop(client, spline_obj=None,execution_time=None,curr_vel=None,lid
 
     ###################################################################################
 
-    lst = []
+    current_position_lst = []
     start_time_hey = time.perf_counter()  # Initialize the start time for 'hey' printing
     start_time_lst = time.perf_counter()
-    hey_interval = 2.0
-    lst_interval = 80
+    current_position_interval = 2.0
+    lst_interval = 40
 
     ###################################################################################
     while last_iteration - start_time < 300:
@@ -93,34 +93,17 @@ def following_loop(client, spline_obj=None,execution_time=None,curr_vel=None,lid
             curr_vel = car_state.speed
             curr_pos, curr_rot = spatial_utils.extract_pose_from_airsim(vehicle_pose)
             ###############################################################################################
-            if now - start_time_hey >= hey_interval:
-
-                """settings positions"""
-
-                # settings_position = client.simGetObjectPose('Car1').position
-                # x = client.simGetObjectPose('Car1').position.x_val
-                # y = client.simGetObjectPose('Car1').position.y_val
-                # z = client.simGetObjectPose('Car1').position.z_val
-                # another_position_settings = [x, y, z]
-                # another_position_airsim = turn_helper.get_other_position_ref_to_self(client.simGetObjectPose('Car1').position,
-                #                                               [40,-2.5,0.0])
-                # another_position_global = turn_helper.airsim_point_to_global(another_position_airsim, execution_time, curr_vel, lidar_to_map)
-                # lst.append(another_position_global)
-                # eng_position,_ = spatial_utils.extract_pose_from_airsim(vehicle_pose)
-                # print(eng_position)
-                # eng_position = [eng_position[0],eng_position[1],eng_position[2]]
-                # print(eng_position)
-
+            if now - start_time_hey >= current_position_interval:
                 """global positions"""
 
                 x = client.simGetVehiclePose('Car1').position.x_val
                 y = client.simGetVehiclePose('Car1').position.y_val
                 z = client.simGetVehiclePose('Car1').position.z_val
-                another_position_airsim = [x,y,z]
+                current_position_airsim = [x,y,z]
                 # another_position_airsim = turn_helper.get_other_position_ref_to_self(another_position)
-                another_position_global = turn_helper.airsim_point_to_global(another_position_airsim,execution_time=execution_time, curr_vel=curr_vel, lidar_to_map=lidar_to_map)
-                print(another_position_global)
-                lst.append(another_position_global)
+                current_position_global = turn_helper.airsim_point_to_global(current_position_airsim, execution_time=execution_time, curr_vel=curr_vel, transition_matrix=transition_matrix)
+                print(current_position_global)
+                current_position_lst.append(current_position_global)
                 # print(another_position_global)
                 # start_time_hey = now
 
@@ -128,7 +111,7 @@ def following_loop(client, spline_obj=None,execution_time=None,curr_vel=None,lid
 
             if now - start_time_lst >= lst_interval:
                 # print(lst)
-                plots_utils.plot_the_car_path(lst) 
+                plots_utils.plot_the_car_path(current_position_lst)
                 break
 
             ##############################################################################
@@ -147,7 +130,9 @@ def following_loop(client, spline_obj=None,execution_time=None,curr_vel=None,lid
             # Close a control loop over the throttle/speed of the vehicle:
             throttle_command = speed_controller.velocity_control(desired_speed, 0, curr_vel)
             throttle_command = np.clip(throttle_command, 0.0, 1.0)
-
+            # car_state = client.getCarState()
+            # curr_vel = car_state.speed
+            # print(curr_vel)
             desired_steer /= follow_handler.max_steering  # Convert range to [-1, 1]
             desired_steer = np.clip(desired_steer, -0.3, 0.3)  # Saturate
 

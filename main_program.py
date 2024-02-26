@@ -20,7 +20,7 @@ if __name__ == '__main__':
     # Detect the cones and spline points, and return their location:
     print('Starting on-the-fly cone mapping with constant speed and steering procedure.')
     #mapping_data, pursuit_points = cone_mapping.mapping_loop(airsim_client)
-    tracked_points,execution_time,curr_vel,lidar_to_map = cone_mapping.mapping_loop(airsim_client)
+    tracked_points,execution_time,curr_vel,transition_matrix = cone_mapping.mapping_loop(airsim_client)
 
     print('Mapping complete!')
 
@@ -33,9 +33,13 @@ if __name__ == '__main__':
     # Arrange the points and generate a path spline:
     #track_points = spline_utils.generate_path_points(mapping_data)
     #spline_obj = spline_utils.PathSpline(tracked_points[::2, 0], tracked_points[::2, 1])
+
+
     x = [sublist[0] for sublist in tracked_points[::2]]
     y = [sublist[1] for sublist in tracked_points[::2]]
-    x, y = x[::2], y[::2]
+
+    # check_lst = [[x[i], y[i]] for i in range(len(x))]
+
     spline_obj = spline_utils.PathSpline(x, y)
     spline_obj.generate_spline(amount=0.1, meters=True, smoothing=1, summation=len(x))
     print('Done!')
@@ -44,7 +48,7 @@ if __name__ == '__main__':
 
     # Follow the spline using Stanley's method:
     print('Starting variable speed spline following procedure.')
-    path_following.following_loop(airsim_client, spline_obj,execution_time,curr_vel,lidar_to_map)
+    path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel, transition_matrix)
     print('Full process complete! stopping vehicle.')
 
     # Done! stop vehicle:

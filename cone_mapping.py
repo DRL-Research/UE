@@ -116,13 +116,12 @@ def mapping_loop(client):
 
             ########################################################################################################################
             current_car1_settings_position = spatial_utils.get_car_settings_position(client,"Car1")
-            airsim_position = [vehicle_pose.position.x_val,vehicle_pose.position.y_val,vehicle_pose.position.z_val]
-            global_position = turn_helper.airsim_point_to_global(airsim_position,execution_time,curr_vel,lidar_to_map)
+
             # print(global_position)
 
-            tracked_points_bezier = turn_helper.create_bezier_curve(current_car1_settings_position, execution_time, curr_vel, lidar_to_map,car1_initial_settings_position,global_position, direction='left', car1_airsim_position=vehicle_pose, epsilon=0.5)
+            tracked_points_bezier = turn_helper.create_bezier_curve(client,current_car1_settings_position, execution_time, curr_vel,car1_initial_settings_position,transition_matrix=vehicle_to_map, direction='left')
             if tracked_points_bezier is not None:
-                return tracked_points_bezier,execution_time,curr_vel,lidar_to_map
+                return tracked_points_bezier,execution_time,curr_vel,vehicle_to_map
             ########################################################################################################################
 
             distance_from_start = np.linalg.norm(vehicle_to_map[0:2, 3])
