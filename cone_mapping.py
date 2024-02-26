@@ -11,7 +11,10 @@ import path_control
 import os
 import cv2
 import struct
-
+import bezier
+import spline_utils
+import path_following
+import turn_helper
 
 decimation = 30e9  # Used to save an output image every X iterations.
 
@@ -41,7 +44,9 @@ def process_camera(lidar_to_cam, vector, camera, image, tracked_cone, idx, copy_
     return cone_color
 
 
+
 def mapping_loop(client):
+
     global decimation
     image_dest = os.path.join(os.getcwd(), 'images')
     data_dest = os.path.join(os.getcwd(), 'recordings')
@@ -71,7 +76,7 @@ def mapping_loop(client):
     shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
 
     # Initialize vehicle starting point
-    spatial_utils.set_airsim_pose(client, [0.0, 0.0], [90.0, 0, 0])
+    # spatial_utils.set_airsim_pose(client, [0.0, 0.0], [90.0, 0, 0])
     time.sleep(1.0)
     car_controls = airsim.CarControls()
     car_controls.throttle = 0.2
@@ -88,9 +93,12 @@ def mapping_loop(client):
     last_iteration = start_time
     sample_time = 0.1
     execution_time = 0.0
-
+    tracked_points_bezier = []
     idx = 0
     save_idx = 0
+    #############################################################################################################
+    car1_initial_settings_position = spatial_utils.get_car_settings_position(client,"Car1")
+    #############################################################################################################
     while last_iteration - start_time < 300:
         now = time.perf_counter()
         delta_time = now - last_iteration
@@ -98,11 +106,24 @@ def mapping_loop(client):
         if delta_time > sample_time:
             last_iteration = time.perf_counter()
             vehicle_pose = client.simGetVehiclePose()
+
+
             vehicle_to_map = spatial_utils.tf_matrix_from_airsim_object(vehicle_pose)
             map_to_vehicle = np.linalg.inv(vehicle_to_map)
             lidar_to_map = np.matmul(vehicle_to_map, lidar_to_vehicle)
             car_state = client.getCarState()
             curr_vel = car_state.speed
+
+            ########################################################################################################################
+            current_car1_settings_position = spatial_utils.get_car_settings_position(client,"Car1")
+            airsim_position = [vehicle_pose.position.x_val,vehicle_pose.position.y_val,vehicle_pose.position.z_val]
+            global_position = turn_helper.airsim_point_to_global(airsim_position,execution_time,curr_vel,lidar_to_map)
+            # print(global_position)
+
+            tracked_points_bezier = turn_helper.create_bezier_curve(current_car1_settings_position, execution_time, curr_vel, lidar_to_map,car1_initial_settings_position,global_position, direction='left', car1_airsim_position=vehicle_pose, epsilon=0.5)
+            if tracked_points_bezier is not None:
+                return tracked_points_bezier,execution_time,curr_vel,lidar_to_map
+            ########################################################################################################################
 
             distance_from_start = np.linalg.norm(vehicle_to_map[0:2, 3])
             if not loop_trigger:
@@ -201,7 +222,8 @@ def mapping_loop(client):
             pickle.dump(tracked_objects, pickle_file)
         print('pickle saved')
 
-    return tracked_cones, pursuit_follower.pursuit_points
+    tracked_cones = tracked_points_bezier
+    return tracked_cones #, pursuit_follower.pursuit_points
 
 
 if __name__ == '__main__':

@@ -1,10 +1,26 @@
 # Not based upon any imports
 
 def filter_value(current_val, previous_val, alpha):
+    """
+    Filter a value using a exponential smoothing.
+
+    :param current_val: Current value to be included in the filter (float).
+    :param previous_val: Previous filtered value (float).
+    :param alpha: Weighting factor (0.0 to 1.0) for the current value (float).
+    :return: Filtered value (float).
+    """
     return previous_val * alpha + current_val * (1.0-alpha)
 
 
 def clamp(my_value, min_value, max_value):
+    """
+    Clamp a value within a specified range.
+
+    :param my_value: Value to be clamped (float).
+    :param min_value: Minimum allowed value (float).
+    :param max_value: Maximum allowed value (float).
+    :return: Clamped value (float).
+    """
     return max(min(my_value, max_value), min_value)
 
 
@@ -39,6 +55,13 @@ class PidfControl:
     # The measurement input is a position, hence it is differentiated before computing the error.
     # Units depend on caller function's use case.
     def compute_velocity(self, pos, vel=None):
+        """
+        Compute the velocity based on the position change over time.
+
+        :param pos: Current position (float).
+        :param vel: Optional velocity input (float).
+        :return: None (updates class attributes). self.pos_prev, self.vel_prev, and self.filtered_vel
+        """
         # In most cases we would want to supply position data and derive velocity from it.
         # But, in some cases we might have the velocity already available,
         # for example if we have a gyro attached to the shaft.
@@ -55,12 +78,26 @@ class PidfControl:
         self.vel_prev = self.filtered_vel
 
     def compute_integral(self, err):
+        """
+        Compute the integral term for PID control.
+
+        :param err: Error term (float).
+        :return: None (updates class attribute). self.integral
+        """
         self.integral += err * self.ki
         self.integral = clamp(self.integral, -self.max_integral, self.max_integral)  # Assuming symmetrical behaviour
 
     def velocity_control(self, setpoint, pos, vel=None):
+        """
+        Perform velocity control using PIDF.
+
+        :param setpoint: Desired velocity setpoint (float).
+        :param pos: Current position (float).
+        :param vel: Optional velocity input (float).
+        :return: Control output (float). calculated using the PIDF formula
+        """
         self.compute_velocity(pos, vel)
-        err = setpoint - self.filtered_vel
+        err = setpoint - self.filtered_vel #desired velocity - filtered velocity
         self.compute_integral(err)
         # We want to disable the integral term if the setpoint is too low to prevent currents:
         if abs(setpoint) < self.min_setpoint:
@@ -69,8 +106,16 @@ class PidfControl:
         return output
 
     def position_control(self, setpoint, pos, vel=None):
+        """
+        Perform position control using PIDF.
+
+        :param setpoint: Desired position setpoint (float).
+        :param pos: Current position (float).
+        :param vel: Optional velocity input (float).
+        :return: Control output (float). calculated using the PIDF formula
+        """
         self.compute_velocity(pos, vel)
-        err = setpoint - pos
+        err = setpoint - pos #desired position - position
         self.compute_integral(err)
         output = err * self.kp + self.integral - self.kd * self.filtered_vel
         return output

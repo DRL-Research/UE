@@ -129,9 +129,19 @@ def tf_matrix_from_airsim_object(actor_pose):
     return tf_matrix_from_eng_pose(pos, rot)
 
 
+##########################################################################################################
+
+def get_car_settings_position(client, car_name):
+    return client.simGetObjectPose(car_name).position
+
+
+##########################################################################################################
+
+
 if __name__ == "__main__":
     import airsim
     import time
+
     client = airsim.CarClient()
     client.confirmConnection()
     time.sleep(1.0)

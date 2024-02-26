@@ -1,3 +1,5 @@
+import plots_utils
+import turn_helper
 from spline_utils import PathSpline
 import numpy as np
 import airsim
@@ -11,7 +13,7 @@ import csv
 import os
 
 
-def following_loop(client, spline_obj=None):
+def following_loop(client, spline_obj=None,execution_time=None,curr_vel=None,lidar_to_map=None):
     data_dest = os.path.join(os.getcwd(), 'recordings')
     os.makedirs(data_dest, exist_ok=True)
     save_data = False
@@ -44,8 +46,8 @@ def following_loop(client, spline_obj=None):
     # Define Stanley-method parameters:
     follow_handler = path_control.StanleyFollower(spline_obj)
     follow_handler.k_vel *= 2.0  # Arbitrary
-    follow_handler.max_velocity = 15.0  # m/s
-    follow_handler.min_velocity = 10.0  # m/s
+    follow_handler.max_velocity = 8.0  # m/s
+    follow_handler.min_velocity = 3.0  # m/s
     follow_handler.lookahead = 5.0  # meters
     follow_handler.k_steer = 2.0  # Stanley steering coefficient
 
@@ -70,6 +72,15 @@ def following_loop(client, spline_obj=None):
     last_iteration = start_time
     sample_time = 0.01
 
+    ###################################################################################
+
+    lst = []
+    start_time_hey = time.perf_counter()  # Initialize the start time for 'hey' printing
+    start_time_lst = time.perf_counter()
+    hey_interval = 2.0
+    lst_interval = 80
+
+    ###################################################################################
     while last_iteration - start_time < 300:
         now = time.perf_counter()
         delta_time = now - last_iteration
@@ -81,6 +92,46 @@ def following_loop(client, spline_obj=None):
             car_state = client.getCarState()
             curr_vel = car_state.speed
             curr_pos, curr_rot = spatial_utils.extract_pose_from_airsim(vehicle_pose)
+            ###############################################################################################
+            if now - start_time_hey >= hey_interval:
+
+                """settings positions"""
+
+                # settings_position = client.simGetObjectPose('Car1').position
+                # x = client.simGetObjectPose('Car1').position.x_val
+                # y = client.simGetObjectPose('Car1').position.y_val
+                # z = client.simGetObjectPose('Car1').position.z_val
+                # another_position_settings = [x, y, z]
+                # another_position_airsim = turn_helper.get_other_position_ref_to_self(client.simGetObjectPose('Car1').position,
+                #                                               [40,-2.5,0.0])
+                # another_position_global = turn_helper.airsim_point_to_global(another_position_airsim, execution_time, curr_vel, lidar_to_map)
+                # lst.append(another_position_global)
+                # eng_position,_ = spatial_utils.extract_pose_from_airsim(vehicle_pose)
+                # print(eng_position)
+                # eng_position = [eng_position[0],eng_position[1],eng_position[2]]
+                # print(eng_position)
+
+                """global positions"""
+
+                x = client.simGetVehiclePose('Car1').position.x_val
+                y = client.simGetVehiclePose('Car1').position.y_val
+                z = client.simGetVehiclePose('Car1').position.z_val
+                another_position_airsim = [x,y,z]
+                # another_position_airsim = turn_helper.get_other_position_ref_to_self(another_position)
+                another_position_global = turn_helper.airsim_point_to_global(another_position_airsim,execution_time=execution_time, curr_vel=curr_vel, lidar_to_map=lidar_to_map)
+                print(another_position_global)
+                lst.append(another_position_global)
+                # print(another_position_global)
+                # start_time_hey = now
+
+
+
+            if now - start_time_lst >= lst_interval:
+                # print(lst)
+                plots_utils.plot_the_car_path(lst) 
+                break
+
+            ##############################################################################
             curr_heading = np.deg2rad(curr_rot[0])
 
             distance_from_start = np.linalg.norm(vehicle_to_map[0:2, 3])
@@ -107,12 +158,16 @@ def following_loop(client, spline_obj=None):
             car_controls.steering = real_steer
             client.setCarControls(car_controls)
 
+
             if save_data:
                 car_data = np.append(car_data,
                                      [[curr_pos[0], curr_pos[1], curr_rot[0],
                                        desired_speed, car_state.speed,
                                        desired_steer, real_steer, throttle_command]],
                                      axis=0)
+
+
+
 
     pickling_objects = {'path': follow_handler.path, 'car_data': car_data}
     if save_data:
