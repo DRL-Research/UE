@@ -45,3 +45,26 @@ def plot_the_car_path(points):
 
     plt.grid(True)
     plt.show()
+
+def combine_plot(xi,yi,points):
+    plt.figure(figsize=(10, 6))
+    plt.cla()
+    ax = plt.gca()
+    ax.invert_xaxis()
+
+    x_coords = [point[0] for point in points]
+    y_coords = [point[1] for point in points]
+
+    x_coords = x_coords[::8]
+    y_coords = y_coords[::8]
+
+    plt.plot(yi, xi,color='red', label='bezier')
+    # plt.plot(y_coords, x_coords, marker='o', linestyle='-',color='green',label='actual')
+    plt.plot(y_coords, x_coords, color='green', label='actual')
+
+    plt.title('The Car Actual Path')
+    plt.xlabel('Y Coordinate')
+    plt.ylabel('X Coordinate')
+
+    plt.legend()
+    plt.show()

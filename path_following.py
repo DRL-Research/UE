@@ -78,7 +78,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
     start_time_hey = time.perf_counter()  # Initialize the start time for 'hey' printing
     start_time_lst = time.perf_counter()
     current_position_interval = 2.0
-    lst_interval = 40
+    lst_interval = 45
 
     ###################################################################################
     while last_iteration - start_time < 300:
@@ -112,6 +112,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
             if now - start_time_lst >= lst_interval:
                 # print(lst)
                 plots_utils.plot_the_car_path(current_position_lst)
+                return current_position_lst
                 break
 
             ##############################################################################
