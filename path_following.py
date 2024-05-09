@@ -91,6 +91,7 @@ def following_loop(client, spline_obj=None):
                 if distance_from_start < entering_distance:
                     break
 
+            
             desired_speed, desired_steer = follow_handler.calc_ref_speed_steering(curr_pos, curr_vel, curr_heading)
 
             # Close a control loop over the throttle/speed of the vehicle:

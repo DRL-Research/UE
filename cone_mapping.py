@@ -3,6 +3,7 @@ import pickle
 import airsim
 import numpy as np
 
+import intersection_simulation
 import tracker_utils
 import camera_utils
 import path_control
@@ -76,6 +77,7 @@ def mapping_loop(client):
     client.setCarControls(controls=car_controls, vehicle_name='Car1')
 
     # moving car 2
+    intersection_simulation.setCarSpeed(client, 'Car2', 0.5)
     # car2_controls = airsim.CarControls()
     # car2_controls.throttle = 0.5
     # client.setCarControls(controls=car2_controls, vehicle_name='Car2')
