@@ -1,3 +1,5 @@
+import math
+
 import plots_utils
 import turn_helper
 from spline_utils import PathSpline
@@ -78,8 +80,8 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
     start_time_hey = time.perf_counter()  # Initialize the start time for 'hey' printing
     start_time_lst = time.perf_counter()
     current_position_interval = 2.0
-    lst_interval = 45
-
+    lst_interval = 120
+    real_steer = None
     ###################################################################################
     while last_iteration - start_time < 300:
         now = time.perf_counter()
@@ -96,24 +98,22 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
             if now - start_time_hey >= current_position_interval:
                 """global positions"""
 
-                x = client.simGetVehiclePose('Car1').position.x_val
-                y = client.simGetVehiclePose('Car1').position.y_val
-                z = client.simGetVehiclePose('Car1').position.z_val
-                current_position_airsim = [x,y,z]
+                x = vehicle_pose.position.x_val
+                y = vehicle_pose.position.y_val
+                z = vehicle_pose.position.z_val
+                current_position_airsim = [x ,y ,z]
+
                 # another_position_airsim = turn_helper.get_other_position_ref_to_self(another_position)
                 current_position_global = turn_helper.airsim_point_to_global(current_position_airsim, execution_time=execution_time, curr_vel=curr_vel, transition_matrix=transition_matrix)
-                print(current_position_global)
+                print(f"position: X={current_position_global[0]}, Y={current_position_global[1]}")
+                print(f"speed: {car_state.speed}")
+                print(f"steer: {real_steer if real_steer else 'No real steer'}")
+                print('#' * 50)
                 current_position_lst.append(current_position_global)
-                # print(another_position_global)
-                # start_time_hey = now
-
-
 
             if now - start_time_lst >= lst_interval:
-                # print(lst)
                 plots_utils.plot_the_car_path(current_position_lst)
                 return current_position_lst
-                break
 
             ##############################################################################
             curr_heading = np.deg2rad(curr_rot[0])

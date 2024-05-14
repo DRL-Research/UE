@@ -121,7 +121,7 @@ def mapping_loop(client):
 
             tracked_points_bezier = turn_helper.create_bezier_curve(client,current_car1_settings_position, execution_time, curr_vel,car1_initial_settings_position,transition_matrix=vehicle_to_map, direction='left')
             if tracked_points_bezier is not None:
-                return tracked_points_bezier,execution_time,curr_vel,vehicle_to_map
+                return tracked_points_bezier, execution_time, curr_vel, vehicle_to_map
             ########################################################################################################################
 
             distance_from_start = np.linalg.norm(vehicle_to_map[0:2, 3])

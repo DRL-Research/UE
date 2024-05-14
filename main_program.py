@@ -1,7 +1,7 @@
 import cone_mapping
 import path_following
 import airsim
-
+import numpy as np
 import plots_utils
 import spline_utils
 import path_control
@@ -34,23 +34,23 @@ if __name__ == '__main__':
     #track_points = spline_utils.generate_path_points(mapping_data)
     #spline_obj = spline_utils.PathSpline(tracked_points[::2, 0], tracked_points[::2, 1])
 
-
-    x = [sublist[0] for sublist in tracked_points[::2]]
-    y = [sublist[1] for sublist in tracked_points[::2]]
-
-    # check_lst = [[x[i], y[i]] for i in range(len(x))]
+    x = [sublist[0] for sublist in tracked_points[::10]]
+    y = [sublist[1] for sublist in tracked_points[::10]]
+    print(f'Num of points in spline: {len(x)}')
 
     spline_obj = spline_utils.PathSpline(x, y)
+    ti = time.time()
     spline_obj.generate_spline(amount=0.1, meters=True, smoothing=1, summation=len(x))
-    print('Done!')
+    print(f'Done! it took: {time.time()-ti} sec')
 
-    plots_utils.plot_the_spline(spline_obj.xi,spline_obj.yi)
+    plots_utils.plot_the_spline(spline_obj.xi, spline_obj.yi)
 
     # Follow the spline using Stanley's method:
     print('Starting variable speed spline following procedure.')
     # path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel, transition_matrix)
+
     positions_lst = path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel, transition_matrix)
-    plots_utils.combine_plot(spline_obj.xi,spline_obj.yi,positions_lst)
+    plots_utils.combine_plot(spline_obj.xi, spline_obj.yi, positions_lst)
     print('Full process complete! stopping vehicle.')
 
     # Done! stop vehicle:

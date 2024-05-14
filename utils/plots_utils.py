@@ -46,7 +46,7 @@ def plot_the_car_path(points):
     plt.grid(True)
     plt.show()
 
-def combine_plot(xi,yi,points):
+def combine_plot(xi, yi, points):
     plt.figure(figsize=(10, 6))
     plt.cla()
     ax = plt.gca()
@@ -58,6 +58,10 @@ def combine_plot(xi,yi,points):
     x_coords = x_coords[::8]
     y_coords = y_coords[::8]
 
+    print('-' * 75)
+    print(f"route start at: {xi[0], yi[0]}")
+    print(f"car start: {points[0][0], points[0][1]}")
+    print('-' * 75)
     plt.plot(yi, xi,color='red', label='bezier')
     # plt.plot(y_coords, x_coords, marker='o', linestyle='-',color='green',label='actual')
     plt.plot(y_coords, x_coords, color='green', label='actual')
