@@ -45,14 +45,14 @@ def camera_to_eng(pos):
     return new_pos
 
 
-def set_airsim_pose(airsim_client, desired_position, desired_rot, inherit_z=True):
+def set_airsim_pose(airsim_client, car_name_as_id, desired_position, desired_rot, inherit_z=True):
     # Input is in ENG coordinate system!
     # Both desired position and rotation must have 3 elements: [x,y,z] and [yaw,pitch,roll].
     # Converts to Airsim and sends to client.
 
     desired_position = np.array(desired_position)  # To accept lists as well.
     desired_rot = np.array(desired_rot)  # To accept lists as well.
-    initial_pose = airsim_client.simGetVehiclePose()
+    initial_pose = airsim_client.simGetVehiclePose(vehicle_name=car_name_as_id)
 
     if inherit_z:
         desired_position = np.append(desired_position, -initial_pose.position.z_val)
@@ -72,7 +72,7 @@ def set_airsim_pose(airsim_client, desired_position, desired_rot, inherit_z=True
     initial_pose.position.z_val = pos[2]
 
     # Send results to client:
-    airsim_client.simSetVehiclePose(initial_pose, ignore_collision=True)
+    airsim_client.simSetVehiclePose(vehicle_name=car_name_as_id, pose=initial_pose, ignore_collision=True)
 
 
 def extract_rotation_from_airsim(orientation):
