@@ -11,6 +11,8 @@ if __name__ == '__main__':
     airsim_client = airsim.CarClient()
     airsim_client.confirmConnection()
     airsim_client.enableApiControl(True)
+    r = 5
+    print(r)
 
     # Detect the cones and spline points, and return their location:
     print('Starting on-the-fly cone mapping with constant speed and steering procedure.')
