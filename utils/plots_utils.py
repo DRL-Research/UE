@@ -31,8 +31,8 @@ def plot_the_car_path(points):
     x_coords = [point[0] for point in points]
     y_coords = [point[1] for point in points]
 
-    x_coords = x_coords[::8]
-    y_coords = y_coords[::8]
+    # x_coords = x_coords[::8]
+    # y_coords = y_coords[::8]
 
     # Plotting with reversed x-axis
     plt.plot(y_coords, x_coords, marker='o', linestyle='-')
@@ -55,8 +55,8 @@ def combine_plot(xi, yi, points):
     x_coords = [point[0] for point in points]
     y_coords = [point[1] for point in points]
 
-    x_coords = x_coords[::8]
-    y_coords = y_coords[::8]
+    # x_coords = x_coords[::8]
+    # y_coords = y_coords[::8]
 
     print('-' * 75)
     print(f"route start at: {xi[0], yi[0]}")

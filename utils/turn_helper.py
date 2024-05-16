@@ -47,21 +47,24 @@ def get_other_position_ref_to_self(self_pos, other_pos):
     # return [x, y, z]
 
 
-def get_points_for_bezier_curve(current_car1_settings_position, execution_time, curr_vel, transition_matrix, direction):
+def get_points_for_bezier_curve(current_car1_settings_position, execution_time, curr_vel, transition_matrix, direction,client): #todo need to check this function
 
-    left = [25, -15]
+    # left = [25, -15] # shahar ?????
     if direction == 'left':
-        # destination_point_settings_position = [current_car1_settings_position.x_val + 10, current_car1_settings_position.y_val - 6,
+        # destination_point_settings_position = [current_car1_settings_position.x_val + 20, current_car1_settings_position.y_val - 15,
         #                                current_car1_settings_position.z_val]
-        # control_point_settings_position = [current_car1_settings_position.x_val + 10, current_car1_settings_position.y_val,
+        # control_point_settings_position = [current_car1_settings_position.x_val + 20, current_car1_settings_position.y_val,
         #                                    current_car1_settings_position.z_val]
-        destination_point_settings_position = [left[0], left[1], current_car1_settings_position.z_val]
-        control_point_settings_position = [left[0], current_car1_settings_position.y_val, current_car1_settings_position.z_val]
+
+        destination_point_settings_position = [client.simGetVehiclePose().position.x_val + 20, client.simGetVehiclePose().position.y_val - 15,
+                                               current_car1_settings_position.z_val]
+        control_point_settings_position = [client.simGetVehiclePose().position.x_val + 20, client.simGetVehiclePose().position.y_val,
+                                           current_car1_settings_position.z_val]
 
     else:  # direction == right
-        destination_point_settings_position = [current_car1_settings_position.x_val + 10, current_car1_settings_position.y_val + 6,
+        destination_point_settings_position = [current_car1_settings_position.x_val + 20, current_car1_settings_position.y_val + 15,
                                        current_car1_settings_position.z_val]
-        control_point_settings_position = [current_car1_settings_position.x_val + 10, current_car1_settings_position.y_val,
+        control_point_settings_position = [current_car1_settings_position.x_val + 20, current_car1_settings_position.y_val,
                                            current_car1_settings_position.z_val]
 
 
@@ -91,19 +94,23 @@ def create_bezier_curve(client, current_car1_settings_position, execution_time, 
     if 2.5 <= distance_from_car1_initial_settings_position <= 2.7:
         destination_point_global, control_point_global = get_points_for_bezier_curve(current_car1_settings_position,
                                                                                      execution_time, curr_vel,
-                                                                                    transition_matrix,direction)
+                                                                                    transition_matrix,direction,client)
 
         # destination_point_global = np.array([33.5,17.5])
         # control_point_global = np.array([13.5,17.5])
-        pos = client.simGetVehiclePose().position
-        x_start = pos.x_val
-        y_start = pos.y_val
-        start_point = np.array([x_start, y_start])
+
+        x_set_start = car1_initial_settings_position.x_val
+        y_set_start = car1_initial_settings_position.y_val
+        x_start = client.simGetVehiclePose().position.x_val
+        y_start = client.simGetVehiclePose().position.y_val
+        start_point = np.array([x_start,y_start])  # beacause this is the start point ref to car 1
+
+        # start_point = np.array([0.0, 0.0])  # beacause this is the start point ref to car 1
 
         global_curve_points = bezier.generate_curve_points(start_point, control_point_global,
                                                            destination_point_global)  # todo this is not the same coorainate maybe
-        global_curve_points = [[round(p[0], 7), round(p[1], 7), 0] for p in global_curve_points]  # global
-
+        global_curve_points = [[p[0], p[1], 0] for p in global_curve_points]  # global
+        # global_curve_points = [[round(p[0], 7), round(p[1], 7), 0] for p in global_curve_points]  # shahar ?????????
         return global_curve_points
     else:
         return None

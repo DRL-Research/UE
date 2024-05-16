@@ -1,5 +1,5 @@
 import math
-
+import psutil
 import plots_utils
 import turn_helper
 from spline_utils import PathSpline
@@ -51,7 +51,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
     follow_handler.max_velocity = 8.0  # m/s
     follow_handler.min_velocity = 3.0  # m/s
     follow_handler.lookahead = 5.0  # meters
-    follow_handler.k_steer = 2.0  # Stanley steering coefficient
+    follow_handler.k_steer = 10.0  # Stanley steering coefficient  # shahar changes 2 to be 10
 
     # Open access to shared memory blocks:
     shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
@@ -67,7 +67,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
     leaving_distance = 10.0
     entering_distance = 4.0
 
-    car_controls = airsim.CarControls()
+    car_controls = airsim.CarControls("Car1")
     car_data = np.ndarray(shape=(0, 8))
 
     start_time = time.perf_counter()
@@ -79,78 +79,115 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
     current_position_lst = []
     start_time_hey = time.perf_counter()  # Initialize the start time for 'hey' printing
     start_time_lst = time.perf_counter()
-    current_position_interval = 2.0
-    lst_interval = 120
-    real_steer = None
+    current_position_interval = 0.5 ## every this time i see the point in the plot of the car route and the print
+    max_run_time = 60
+    turn_completed = False
+
     ###################################################################################
-    while last_iteration - start_time < 300:
+    target_point = [spline_obj.xi[-1], spline_obj.yi[-1]]
+    while not turn_completed:
         now = time.perf_counter()
-        delta_time = now - last_iteration
 
-        if delta_time > sample_time:
-            last_iteration = time.perf_counter()
-            vehicle_pose = client.simGetVehiclePose()
-            vehicle_to_map = spatial_utils.tf_matrix_from_airsim_object(vehicle_pose)
-            car_state = client.getCarState()
-            curr_vel = car_state.speed
-            curr_pos, curr_rot = spatial_utils.extract_pose_from_airsim(vehicle_pose)
-            ###############################################################################################
-            if now - start_time_hey >= current_position_interval:
-                """global positions"""
+        vehicle_pose = client.simGetVehiclePose()
+        vehicle_to_map = spatial_utils.tf_matrix_from_airsim_object(vehicle_pose)
+        car_state = client.getCarState()
+        curr_vel = car_state.speed
+        curr_pos, curr_rot = spatial_utils.extract_pose_from_airsim(vehicle_pose)
+        ###############################################################################################
 
+        x = vehicle_pose.position.x_val
+        y = vehicle_pose.position.y_val
+        z = vehicle_pose.position.z_val
+
+        current_position_airsim = [x, y, z]
+
+        current_position_global = turn_helper.airsim_point_to_global(current_position_airsim, execution_time=execution_time, curr_vel=curr_vel,
+                                                                     transition_matrix=transition_matrix)
+
+        distance_from_target_point = math.sqrt((current_position_global[0] - target_point[0]) ** 2 +
+                                               (current_position_global[1] - target_point[1]) ** 2)
+
+
+        """global positions"""
+        print(f"position {current_position_global}")
+        # print(f'Steer: {car_controls.steering}')
+        print(f'Steer: {client.getCarControls("Car1").steering}')
+        print(f"distance_from_target_point = {distance_from_target_point}")
+        current_position_lst.append(current_position_global)
+
+
+        if now - start_time_lst >= max_run_time: ## if its miss the distance from the point the car will stop after max_run_time
+            # print(lst)
+            plots_utils.plot_the_car_path(current_position_lst)
+            return current_position_lst
+
+
+        ##############################################################################
+        curr_heading = np.deg2rad(curr_rot[0])
+
+        if distance_from_target_point < 1.0 and -0.25 <= client.getCarControls("Car1").steering <= 0.25: # bezier follow completed
+
+            # let the car drive in straight line and low speed for few seconds
+            car_controls.throttle = 0.2
+            car_controls.steering = 0.0
+            client.setCarControls(car_controls)
+
+            t = time.perf_counter()
+            while True:  ## keep drive staright for 5 seconds after we finished the turn
+
+                elapsed_time = time.perf_counter() - t
+                if elapsed_time > 5:
+                    print("5 seconds have passed. Exiting the loop.")
+                    break
+
+                vehicle_pose = client.simGetVehiclePose("Car1")
                 x = vehicle_pose.position.x_val
                 y = vehicle_pose.position.y_val
                 z = vehicle_pose.position.z_val
-                current_position_airsim = [x ,y ,z]
 
-                # another_position_airsim = turn_helper.get_other_position_ref_to_self(another_position)
-                current_position_global = turn_helper.airsim_point_to_global(current_position_airsim, execution_time=execution_time, curr_vel=curr_vel, transition_matrix=transition_matrix)
-                print(f"position: X={current_position_global[0]}, Y={current_position_global[1]}")
-                print(f"speed: {car_state.speed}")
-                print(f"steer: {real_steer if real_steer else 'No real steer'}")
-                print('#' * 50)
+                current_position_airsim = [x, y, z]
+
+                current_position_global = turn_helper.airsim_point_to_global(current_position_airsim, execution_time=execution_time,
+                                                                             curr_vel=curr_vel,
+                                                                             transition_matrix=transition_matrix)
                 current_position_lst.append(current_position_global)
 
-            if now - start_time_lst >= lst_interval:
-                plots_utils.plot_the_car_path(current_position_lst)
-                return current_position_lst
+            turn_completed = True
 
-            ##############################################################################
-            curr_heading = np.deg2rad(curr_rot[0])
+        # else: ## distance_from_target_point > 0.5:
 
-            distance_from_start = np.linalg.norm(vehicle_to_map[0:2, 3])
-            if not loop_trigger:
-                if distance_from_start > leaving_distance:
-                    loop_trigger = True
-            else:
-                if distance_from_start < entering_distance:
-                    break
+        desired_speed, desired_steer = follow_handler.calc_ref_speed_steering(curr_pos, curr_vel, curr_heading)
+        # Close a control loop over the throttle/speed of the vehicle:
+        # throttle_command = speed_controller.velocity_control(desired_speed, 0, curr_vel)
+        # throttle_command = np.clip(throttle_command, 0.0, 0.4)
+        # car_state = client.getCarState()
+        # curr_vel = car_state.speed
+        # print(curr_vel)
+        desired_steer /= follow_handler.max_steering  # Convert range to [-1, 1]
+        desired_steer = np.clip(desired_steer, -1.0, 1.0)  # maybe we need to play with these values
 
-            desired_speed, desired_steer = follow_handler.calc_ref_speed_steering(curr_pos, curr_vel, curr_heading)
+        shmem_setpoint.buf[:8] = struct.pack('d', desired_steer)
+        real_steer = struct.unpack('d', shmem_output.buf[:8])[0]
 
-            # Close a control loop over the throttle/speed of the vehicle:
-            throttle_command = speed_controller.velocity_control(desired_speed, 0, curr_vel)
-            throttle_command = np.clip(throttle_command, 0.0, 1.0)
-            # car_state = client.getCarState()
-            # curr_vel = car_state.speed
-            # print(curr_vel)
-            desired_steer /= follow_handler.max_steering  # Convert range to [-1, 1]
-            desired_steer = np.clip(desired_steer, -0.3, 0.3)  # Saturate
+        # car_controls.throttle = throttle_command
 
-            shmem_setpoint.buf[:8] = struct.pack('d', desired_steer)
-            real_steer = struct.unpack('d', shmem_output.buf[:8])[0]
+        car_controls.throttle = 0.4
 
-            car_controls.throttle = throttle_command
-            car_controls.steering = real_steer
-            client.setCarControls(car_controls)
+        car_controls.steering = real_steer
+        client.setCarControls(car_controls)
+
+    plots_utils.plot_the_car_path(current_position_lst)
+    plots_utils.combine_plot(spline_obj.xi, spline_obj.yi, current_position_lst)
+    return current_position_lst
 
 
-            if save_data:
-                car_data = np.append(car_data,
-                                     [[curr_pos[0], curr_pos[1], curr_rot[0],
-                                       desired_speed, car_state.speed,
-                                       desired_steer, real_steer, throttle_command]],
-                                     axis=0)
+
+        # if save_data:
+        #     car_data = np.append(car_data,
+        #                          [[curr_pos[0], curr_pos[1], curr_rot[0],
+        #                            desired_speed, car_state.speed,
+        #                            desired_steer, real_steer, throttle_command]],
+        #                          axis=0)
 
 
 

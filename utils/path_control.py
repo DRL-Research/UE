@@ -18,7 +18,7 @@ class StanleyFollower:
         # Max steering MUST be the same as your simulated vehicle's settings within Unreal.
         self.max_velocity = 10  # m/s
         self.min_velocity = 5 # m/s
-        self.max_steering = np.deg2rad(40.0)  # radians
+        self.max_steering = np.deg2rad(80.0)  # radians
 
         # Velocity coefficient defaults to the difference between max and min speeds,
         # divided by the maximum path curvature:
@@ -50,6 +50,7 @@ class StanleyFollower:
         closest_dist = np.linalg.norm(closest_vector)
         ego_rotation = np.array([[np.cos(heading), np.sin(heading)], [-np.sin(heading), np.cos(heading)]])
         ego_closest = np.matmul(ego_rotation, closest_vector)  # Closest vector in vehicle frame of reference
+
         theta_f = -np.arctan(self.k_steer * closest_dist / (np.abs(car_vel) + self.EPSILON))*np.sign(ego_closest[1]) #theta_f represents a closing angle based on the distance to the closest point on the path and the vehicle's velocity.
 
         # Combine them together and saturate:
@@ -63,6 +64,7 @@ class StanleyFollower:
         # This block of code ensures that if the lookahead index exceeds the length of the path array, it wraps around to the beginning of the path. This is relevant when the vehicle is close to the end of the path.
         if lookahead_idx >= self.path.array_length:
             lookahead_idx = lookahead_idx - self.path.array_length
+
 
         # The desired speed (speed) is calculated based on the maximum velocity (self.max_velocity) minus a term that depends on the curvature of the path at the lookahead point.
         # self.k_vel is a coefficient that scales the effect of curvature on speed. The higher the curvature, the lower the desired speed.
@@ -83,7 +85,7 @@ class PursuitFollower:
         self.max_lookahead = max_distance # this maximum lookahead distance sets a limit on how far into the future the vehicle should plan its path based on those cones.
         self.previous_angle = 0.0  # Optional as fallback angle instead of moving straight ahead.
         self.k_steer = 0.5
-        self.max_steering = np.deg2rad(40.0)  # Radians
+        self.max_steering = np.deg2rad(80.0)  # Radians
         self.pursuit_points = [np.array([0.0, 0.0, 0.0])]
 
     def calc_ref_steering(self, tracked_cones, map_to_vehicle):
