@@ -11,7 +11,7 @@ import path_control
 import os
 import cv2
 import struct
-
+from setup_simulation import *
 
 decimation = 30e9  # Used to save an output image every X iterations.
 
@@ -41,7 +41,7 @@ def process_camera(lidar_to_cam, vector, camera, image, tracked_cone, idx, copy_
     return cone_color
 
 
-def mapping_loop(client):
+def mapping_loop(client, setup_manager: SetupManager):
     global decimation
     image_dest = os.path.join(os.getcwd(), 'images')
     data_dest = os.path.join(os.getcwd(), 'recordings')
@@ -71,11 +71,17 @@ def mapping_loop(client):
     shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
 
     # Initialize vehicle starting point
-    spatial_utils.set_airsim_pose(client, [0.0, 0.0], [90.0, 0, 0])
+    # before:  spatial_utils.set_airsim_pose(client, [0.0, 0.0], [90.0, 0, 0])
+    # after:
+    for car_object in setup_manager.cars.values():
+        spatial_utils.set_airsim_pose(client, car_object.name_as_id, car_object.initial_location, [90.0, 0, 0])
+
     time.sleep(1.0)
-    car_controls = airsim.CarControls()
-    car_controls.throttle = 0.2
-    client.setCarControls(car_controls)
+
+    for car_object in setup_manager.cars.values():
+        car_controls = airsim.CarControls()
+        car_controls.throttle = car_object.speed # was just 0.2
+        client.setCarControls(vehicle_name=car_object.name_as_id, controls=car_controls)
 
     # Initialize loop variables
     tracked_cones = []
