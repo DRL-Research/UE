@@ -1,6 +1,10 @@
 import json
+import time
 from enum import Enum
 from typing import NamedTuple, Dict
+import airsim
+
+import spatial_utils
 
 
 class JsonKeys(Enum):
@@ -25,7 +29,7 @@ class CarDict(Dict[str, Car]):
 
 
 class SetupManager:
-    def __init__(self, setup_simulation_path='setup_simulation.json', airsim_settings_path=''):
+    def __init__(self, setup_simulation_path='config.json', airsim_settings_path=''):
         self.setup_simulation_path = setup_simulation_path
         with open(setup_simulation_path, 'r') as f:
             self._data = json.load(f)
@@ -62,6 +66,24 @@ class SetupManager:
 
         return True
 
+    def setup_simulation(self):
+        # step 1: read base location
+        self.extract_cars()
+        # step 2: airsim connection
+        airsim_client = airsim.CarClient()
+        airsim_client.confirmConnection()
+        for car_id, car_object in self.cars.items():
+            airsim_client.enableApiControl(is_enabled=True, vehicle_name=car_object.name_as_id)
+        # step 3: set positions
+        for car_object in self.cars.values():
+            spatial_utils.set_airsim_pose(airsim_client, car_object.name_as_id, car_object.initial_location, [90.0, 0, 0])
+
+        time.sleep(1.0)
+        # set speed / maybe remove this part
+        for car_object in self.cars.values():
+            car_controls = airsim.CarControls()
+            car_controls.throttle = car_object.speed  # was just 0.2
+            airsim_client.setCarControls(vehicle_name=car_object.name_as_id, controls=car_controls)
 
 
 
