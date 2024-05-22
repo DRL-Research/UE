@@ -10,6 +10,7 @@ import spatial_utils
 class JsonKeys(Enum):
     CAR_NAME_AS_ID = "Name as ID"
     CAR_SPEED = "Speed"
+    CAR_YAW = "Yaw"
     CAR_INITIAL_LOCATION = "Initial Location"
     CAR_DESTINATION = "Destination"
     VEHICLES = "Vehicles"
@@ -20,6 +21,7 @@ class JsonKeys(Enum):
 class Car(NamedTuple):
     name_as_id: str
     speed: float
+    yaw: float
     initial_location: dict
     destination: dict
 
@@ -35,11 +37,14 @@ class SetupManager:
             self._data = json.load(f)
         self.cars = CarDict()
         self.airsim_settings_full_path = airsim_settings_path + "/setting.json"
+        self.airsim_client = airsim.CarClient()
+        self.airsim_client.confirmConnection()
 
     def extract_cars(self):
         for car_full_id, car_data in self._data.items():
             current_car = Car(name_as_id=car_data[JsonKeys.CAR_NAME_AS_ID],
                               speed=car_data[JsonKeys.CAR_SPEED],
+                              yaw=car_data[JsonKeys.CAR_YAW],
                               initial_location=car_data[JsonKeys.CAR_INITIAL_LOCATION],
                               destination=car_data[JsonKeys.CAR_DESTINATION])
             # noinspection PyTypedDict
@@ -66,34 +71,16 @@ class SetupManager:
 
         return True
 
-    def setup_simulation(self):
-        # step 1: read base location
-        self.extract_cars()
-        # step 2: airsim connection
-        airsim_client = airsim.CarClient()
-        airsim_client.confirmConnection()
+    def enableApiCarsControl(self):
         for car_id, car_object in self.cars.items():
-            airsim_client.enableApiControl(is_enabled=True, vehicle_name=car_object.name_as_id)
+            self.airsim_client.enableApiControl(is_enabled=True, vehicle_name=car_object.name_as_id)
+
+    def setup_simulation(self):
+        self.extract_cars()
+        self.enableApiCarsControl()
         # step 3: set positions
         for car_object in self.cars.values():
-            spatial_utils.set_airsim_pose(airsim_client, car_object.name_as_id, car_object.initial_location, [90.0, 0, 0])
-
-        time.sleep(1.0)
-        # set speed / maybe remove this part
-        for car_object in self.cars.values():
-            car_controls = airsim.CarControls()
-            car_controls.throttle = car_object.speed  # was just 0.2
-            airsim_client.setCarControls(vehicle_name=car_object.name_as_id, controls=car_controls)
-
-
-
-
-
-
-
-
-
-
-
-
-
+            spatial_utils.set_airsim_pose(self.airsim_client, car_object.name_as_id,
+                                          car_object.initial_location, [0.0, 0, 0])
+            # set yaw
+        return self.airsim_client
