@@ -42,7 +42,7 @@ def process_camera(lidar_to_cam, vector, camera, image, tracked_cone, idx, copy_
     return cone_color
 
 
-def mapping_loop(client):
+def mapping_loop(client, setup_manager: SetupManager):
     global decimation
     image_dest = os.path.join(os.getcwd(), 'images')
     data_dest = os.path.join(os.getcwd(), 'recordings')
@@ -72,8 +72,17 @@ def mapping_loop(client):
     shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
 
     # Initialize vehicle starting point
-    spatial_utils.set_airsim_pose(client, 'Car1', [0.0, 0.0], [90.0, 0, 0])
+    # before:  spatial_utils.set_airsim_pose(client, [0.0, 0.0], [90.0, 0, 0])
+    # after:
+    for car_object in setup_manager.cars.values():
+        spatial_utils.set_airsim_pose(client, car_object.name_as_id, car_object.initial_location, [90.0, 0, 0])
+
     time.sleep(1.0)
+
+    for car_object in setup_manager.cars.values():
+        car_controls = airsim.CarControls()
+        car_controls.throttle = car_object.speed # was just 0.2
+        client.setCarControls(vehicle_name=car_object.name_as_id, controls=car_controls)
 
     # Initialize loop variables
     tracked_cones = []
@@ -128,12 +137,6 @@ def mapping_loop(client):
             # DBSCAN filtering is done on the sensor-frame
             filtered_pc = dbscan_utils.filter_cloud(pointcloud, 3.0, 8.0, -0.5, 1.0)
 
-            detect_car = True
-            if detect_car and now > 25:
-                car_detection(airsim_client=client, points_cloud=pointcloud, lidar_to_map=lidar_to_map,
-                              execution_time=execution_time, velocity=curr_vel, other_car_name='Car2')
-                detect_car = False
-
             # Only if SOME clusters were found:
             if filtered_pc.size > 0:
                 # Cluster centroids, filter them by extent and then sort them by ascending distance:
@@ -184,8 +187,8 @@ def mapping_loop(client):
             shmem_setpoint.buf[:8] = struct.pack('d', desired_steer)
             real_steer = struct.unpack('d', shmem_output.buf[:8])[0]
 
-            # car_controls.steering = desired_steer
-            # client.setCarControls(car_controls)
+            car_controls.steering = desired_steer
+            client.setCarControls(car_controls)
             execution_time = time.perf_counter() - last_iteration
             # print(execution_time)
 
