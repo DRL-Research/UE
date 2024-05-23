@@ -73,11 +73,11 @@ def mapping_loop(client):
     spatial_utils.set_airsim_pose(client, [0.0, 0.0], [0.0, 0, 0])
     time.sleep(1.0)
     car_controls = airsim.CarControls()
-    car_controls.throttle = 0.2
+    car_controls.throttle = 0.5
     client.setCarControls(controls=car_controls, vehicle_name='Car1')
 
     # moving car 2
-    intersection_simulation.setCarSpeed(client, 'Car2', 0.5)
+    #intersection_simulation.setCarSpeed(client, 'Car2', 0.5)
     # car2_controls = airsim.CarControls()
     # car2_controls.throttle = 0.5
     # client.setCarControls(controls=car2_controls, vehicle_name='Car2')
@@ -139,25 +139,8 @@ def mapping_loop(client):
 
             if start_car_detecting and now > 25:
 
-                # get car2 position as given in settings
-                car2_pos_and_orientation = client.simGetObjectPose('Car2')  # contain position + orientation
-                car2_position = car2_pos_and_orientation.position
-                car2_position_as_np_array = np.array([car2_position.x_val, car2_position.y_val, car2_position.z_val])
-                car2_position_eng, _ = spatial_utils.convert_eng_airsim(car2_position_as_np_array, [0, 0, 0])
-
-                # region Keep In Mind
-                # we will keep this to remember this is another way to get the correct position of car2:
-                # car2_also_location = spatial_utils.tf_matrix_from_airsim_object(car2_pos_and_oriantation)
-                # car2_also_location = car2_also_location[3, :3] == car2_position_eng
-                # endregion
-
-                # we want to test our experiments with different kinds of yaw & we don't want to do it HARD-CODDED
-                # we just need to set the yaw in the settings & then we calculate it
-                car2_orientation = car2_pos_and_orientation.orientation
-                yaw = get_yaw_by_orientation(car2_orientation)
-
                 # start handle the data given from car1's lidar
-                car_detection(pointcloud, lidar_to_map, execution_time, curr_vel, yaw, other_true_pos_eng=car2_position_eng)
+                car_detection(client, pointcloud, lidar_to_map, execution_time, curr_vel, 'Car2')
                 # for start we just want to do it at the beginning once and then change the flag
                 start_car_detecting = False
 

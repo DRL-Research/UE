@@ -5,10 +5,11 @@ import numpy as np
 
 import dbscan_utils
 import spatial_utils
-from experiments_helper import *
+from car_detection_experiments_helper import *
 from dbscan_utils import *
 
 yaw_mapping = {0: '^', 90: '>', 180: 'v', 270: '<'}
+
 
 def show_cloud(points_cloud_eng, yaw, save_path='car_mapping_experiments'):
     yaw_description = yaw_mapping[yaw]
@@ -53,34 +54,76 @@ def show_clusters(model, car2_position, eps, min_samples, points):
     plt.show()
 
 
-def car_detection(points_cloud, lidar_to_map, execution_time, velocity, yaw, other_true_pos_eng):
+def car_detection(airsim_client, points_cloud, lidar_to_map, execution_time, velocity, other_car_name):
+    """
+
+    :param airsim_client:
+    :param points_cloud:
+    :param lidar_to_map:
+    :param execution_time:
+    :param velocity:
+    :param other_car_name:
+    :return:
+    """
+    other_car_pos_and_orientation = airsim_client.simGetObjectPose(other_car_name)  # contain position + orientation
+    other_car_position = other_car_pos_and_orientation.position
+    other_car_position_as_np_array = np.array(
+        [other_car_position.x_val, other_car_position.y_val, other_car_position.z_val])
+    other_car_position_eng, _ = spatial_utils.convert_eng_airsim(other_car_position_as_np_array, [0, 0, 0])
+    other_car_true_pos_eng = other_car_position_eng
+    # region Keep In Mind
+    # we will keep this to remember this is another way to get the correct position of car2:
+    # car2_also_location = spatial_utils.tf_matrix_from_airsim_object(car2_pos_and_oriantation)
+    # car2_also_location = car2_also_location[3, :3] == car2_position_eng
+    # endregion
+
+    # we want to test our experiments with different kinds of yaw & we don't want to do it HARD-CODDED
+    # we just need to set the yaw in the settings & then we calculate it
+    other_car_orientation = other_car_pos_and_orientation.orientation
+    yaw = get_yaw_by_orientation(other_car_orientation)
+    # ---------------------------------------------------------------------------------------------------
     # step 1: filter the cloud
     # assume that 50m is not relevant for now, it's far enough and 10m is too close
     min_distance_from_car1, max_distance_from_car1 = 10.0, 50.0
     # assume height of a car is between 0.5m to 4m
     min_height_of_point, max_height_of_point = 0.5, 4.0
     #  check if the point given from lidar has height
-    filtered_points_cloud = dbscan_utils.filter_cloud(points_cloud, min_distance=min_distance_from_car1,
-                              max_distance=max_distance_from_car1, min_height=-min_height_of_point,
+    filtered_points_cloud = dbscan_utils.filter_cloud(points_cloud,
+                                                      min_distance=min_distance_from_car1,
+                                                      max_distance=max_distance_from_car1,
+                                                      min_height=-min_height_of_point,
                                                       max_height=max_height_of_point)
 
-
     # step 2: cluster cloud & save results
-    run_dbscan_params_experiments(filtered_points_cloud, lidar_to_map, execution_time, velocity, yaw, other_true_pos_eng)
+    run_dbscan_params_experiments(filtered_points_cloud, lidar_to_map, execution_time,
+                                  velocity, yaw, other_car_true_pos_eng)
 
 
-def run_dbscan_params_experiments(filtered_points_cloud, lidar_to_map, execution_time, velocity, yaw, other_true_pos_eng):
-    eps_candidates = [0.3, 0.4] #list(np.arange(0.1, 4.5, 0.1))  # min distance between two points to consider them neighbours
-    min_samples_candidates = [2, 3] #list(np.arange(1, 10, 1))  # min number of neighbours to count as a core point
+def run_dbscan_params_experiments(filtered_points_cloud, lidar_to_map, execution_time, velocity, yaw,
+                                  other_true_pos_eng):
+    """
+
+    :param filtered_points_cloud:
+    :param lidar_to_map:
+    :param execution_time:
+    :param velocity:
+    :param yaw:
+    :param other_true_pos_eng:
+    :return:
+    """
+    eps_candidates = [0.3,
+                      0.4]  # list(np.arange(0.1, 4.5, 0.1))  # min distance between two points to consider them neighbours
+    min_samples_candidates = [2, 3]  # list(np.arange(1, 10, 1))  # min number of neighbours to count as a core point
 
     for eps in eps_candidates:
         for min_samples in min_samples_candidates:
             # build a dbscan model -> make prediction -> evaluate results -> save results
             filtered_points_cloud[:, 2] = 0
             dbscan_candidate_model = DBSCAN(eps=eps, min_samples=min_samples).fit(filtered_points_cloud)
-            predicted_other_car_location, err = run_ONE_dbscan_params_experiment(dbscan_candidate_model, lidar_to_map, execution_time,
+            predicted_other_car_location, err = run_ONE_dbscan_params_experiment(dbscan_candidate_model, lidar_to_map,
+                                                                                 execution_time,
                                                                                  velocity, other_true_pos_eng)
-            #show_clusters(dbscan_candidate_model, other_true_pos_eng[:2], eps, min_samples, filtered_points_cloud)
+            # show_clusters(dbscan_candidate_model, other_true_pos_eng[:2], eps, min_samples, filtered_points_cloud)
             evaluate_and_save_dbscan_results(dbscan_candidate_model, predicted_other_car_location, err, yaw, velocity)
     print('-' * 100)
     print('Finished to run DBSCAN Experiments')
@@ -88,6 +131,15 @@ def run_dbscan_params_experiments(filtered_points_cloud, lidar_to_map, execution
 
 
 def run_ONE_dbscan_params_experiment(dbscan_model, lidar_to_map, execution_time, curr_vel, other_car_eng_true_position):
+    """
+
+    :param dbscan_model:
+    :param lidar_to_map:
+    :param execution_time:
+    :param curr_vel:
+    :param other_car_eng_true_position:
+    :return:
+    """
     curr_segments, airsim_curr_centroids, curr_labels = dbscan_utils.collate_segmentation(dbscan_model, 1.0)
     airsim_curr_centroids.sort(key=lambda x: np.linalg.norm(x))
     eng_global_centroids = []
@@ -100,7 +152,7 @@ def run_ONE_dbscan_params_experiment(dbscan_model, lidar_to_map, execution_time,
 
     # compare candidates to target
     other_car_eng_true_position = other_car_eng_true_position[:2]  # we dont care about Z-axis then we can remove it
-    car2_eng_position_prediction, smallest_difference,  = None, np.inf
+    car2_eng_position_prediction, smallest_difference, = None, np.inf
     for eng_global_centroid in eng_global_centroids:
         # we dont care about Z-axis then we can remove it:
         eng_global_centroid = eng_global_centroid[:2]
@@ -109,4 +161,3 @@ def run_ONE_dbscan_params_experiment(dbscan_model, lidar_to_map, execution_time,
             car2_eng_position_prediction, smallest_difference = eng_global_centroid, difference
 
     return car2_eng_position_prediction, smallest_difference
-
