@@ -75,11 +75,6 @@ def mapping_loop(client):
     spatial_utils.set_airsim_pose(client, [0.0, 0.0], [90.0, 0, 0])
     time.sleep(1.0)
 
-    for car_object in setup_manager.cars.values():
-        car_controls = airsim.CarControls()
-        car_controls.throttle = car_object.speed # was just 0.2
-        client.setCarControls(vehicle_name=car_object.name_as_id, controls=car_controls)
-
     # Initialize loop variables
     tracked_cones = []
 

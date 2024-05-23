@@ -4,7 +4,7 @@ from typing import NamedTuple, Dict
 
 
 class JsonKeys(Enum):
-    CAR_NAME_AS_ID = "Name as ID"
+    CAR_NAME_AS_ID = "Name"
     CAR_SPEED = "Speed"
     CAR_INITIAL_LOCATION = "Initial Location"
     CAR_DESTINATION = "Destination"
@@ -34,10 +34,10 @@ class SetupManager:
 
     def extract_cars(self):
         for car_full_id, car_data in self._data.items():
-            current_car = Car(name_as_id=car_data[JsonKeys.CAR_NAME_AS_ID],
-                              speed=car_data[JsonKeys.CAR_SPEED],
-                              initial_location=car_data[JsonKeys.CAR_INITIAL_LOCATION],
-                              destination=car_data[JsonKeys.CAR_DESTINATION])
+            current_car = Car(name_as_id=car_data[JsonKeys.CAR_NAME_AS_ID.value],
+                              speed=car_data[JsonKeys.CAR_SPEED.value],
+                              initial_location=car_data[JsonKeys.CAR_INITIAL_LOCATION.value],
+                              destination=car_data[JsonKeys.CAR_DESTINATION.value])
             # noinspection PyTypedDict
             self.cars[car_full_id] = current_car
 

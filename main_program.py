@@ -3,7 +3,7 @@ import path_following
 import airsim
 import spline_utils
 import path_control
-
+from setup_simulation import *
 
 if __name__ == '__main__':
     # Create an airsim client instance:
@@ -11,6 +11,8 @@ if __name__ == '__main__':
     airsim_client = airsim.CarClient()
     airsim_client.confirmConnection()
 
+    setup_manager = SetupManager()
+    setup_manager.extract_cars()
     for car_id, car_object in setup_manager.cars.items():
         airsim_client.enableApiControl(is_enabled=True, vehicle_name=car_object.name_as_id)
 
