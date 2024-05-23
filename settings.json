@@ -28,7 +28,7 @@
                 "FrontLidar": {
                     "SensorType": 6,
                     "Enabled" : true,
-                    "NumberOfChannels": 16,
+                    "NumberOfChannels": 2,
                     "RotationsPerSecond": 20,
                     "PointsPerSecond": 50000,
                     "X": 2, "Y": 0, "Z": -0.1,
