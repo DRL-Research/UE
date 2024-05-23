@@ -4,7 +4,6 @@ from enum import Enum
 from typing import NamedTuple, Dict
 import airsim
 from config import *
-import spatial_utils
 
 class JsonKeys(Enum):
     NUMBER_OF_ACTIVE_CARS = "Number-Of-Active-Cars"
