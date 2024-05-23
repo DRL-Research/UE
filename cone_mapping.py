@@ -128,6 +128,12 @@ def mapping_loop(client):
             # DBSCAN filtering is done on the sensor-frame
             filtered_pc = dbscan_utils.filter_cloud(pointcloud, 3.0, 8.0, -0.5, 1.0)
 
+            detect_car = True
+            if detect_car and now > 25:
+                car_detection(airsim_client=client, points_cloud=pointcloud, lidar_to_map=lidar_to_map,
+                              execution_time=execution_time, velocity=curr_vel, other_car_name='Car2')
+                detect_car = False
+
             # Only if SOME clusters were found:
             if filtered_pc.size > 0:
                 # Cluster centroids, filter them by extent and then sort them by ascending distance:
