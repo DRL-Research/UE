@@ -1,9 +1,10 @@
+import numpy as np
 import time
 import pickle
+from sklearn.cluster import DBSCAN
 import airsim
-import numpy as np
-
-import intersection_simulation
+import dbscan_utils
+import spatial_utils
 import tracker_utils
 import camera_utils
 import path_control
@@ -11,6 +12,7 @@ import os
 import cv2
 import struct
 from car_mapping import *
+from setup_simulation import *
 
 decimation = 30e9  # Used to save an output image every X iterations.
 
@@ -70,18 +72,13 @@ def mapping_loop(client):
     shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
 
     # Initialize vehicle starting point
-    spatial_utils.set_airsim_pose(client, [0.0, 0.0], [0.0, 0, 0])
+    spatial_utils.set_airsim_pose(client, [0.0, 0.0], [90.0, 0, 0])
     time.sleep(1.0)
-    car_controls = airsim.CarControls()
-    car_controls.throttle = 0.5
-    client.setCarControls(controls=car_controls, vehicle_name='Car1')
 
-    # moving car 2
-    #intersection_simulation.setCarSpeed(client, 'Car2', 0.5)
-    # car2_controls = airsim.CarControls()
-    # car2_controls.throttle = 0.5
-    # client.setCarControls(controls=car2_controls, vehicle_name='Car2')
-
+    for car_object in setup_manager.cars.values():
+        car_controls = airsim.CarControls()
+        car_controls.throttle = car_object.speed # was just 0.2
+        client.setCarControls(vehicle_name=car_object.name_as_id, controls=car_controls)
 
     # Initialize loop variables
     tracked_cones = []
@@ -97,7 +94,6 @@ def mapping_loop(client):
 
     idx = 0
     save_idx = 0
-    start_car_detecting = True
     while last_iteration - start_time < 300:
         now = time.perf_counter()
         delta_time = now - last_iteration
@@ -108,9 +104,8 @@ def mapping_loop(client):
             vehicle_to_map = spatial_utils.tf_matrix_from_airsim_object(vehicle_pose)
             map_to_vehicle = np.linalg.inv(vehicle_to_map)
             lidar_to_map = np.matmul(vehicle_to_map, lidar_to_vehicle)
-            car_state = client.getCarState('Car1')
+            car_state = client.getCarState()
             curr_vel = car_state.speed
-
 
             distance_from_start = np.linalg.norm(vehicle_to_map[0:2, 3])
             if not loop_trigger:
@@ -120,15 +115,13 @@ def mapping_loop(client):
                 if distance_from_start < entering_distance:
                     break
 
-
             # To minimize discrepancy between data sources, all acquisitions must be made before processing:
             responses = client.simGetImages([airsim.ImageRequest("LeftCam", 0, False, False),
                                              airsim.ImageRequest("RightCam", 0, False, False)])
 
-            lidar_data = client.getLidarData(vehicle_name='Car1')
+            lidar_data = client.getLidarData()
             pointcloud = np.array(lidar_data.point_cloud, dtype=np.dtype('f4'))
             pointcloud = pointcloud.reshape((int(pointcloud.shape[0] / 3), 3))
-
 
             # Save the images in memory
             left_image = camera_utils.get_bgr_image(responses[0])
@@ -136,14 +129,6 @@ def mapping_loop(client):
 
             left_copy = np.copy(left_image)
             right_copy = np.copy(right_image)
-
-            if start_car_detecting and now > 25:
-
-                # start handle the data given from car1's lidar
-                car_detection(client, pointcloud, lidar_to_map, execution_time, curr_vel, 'Car2')
-                # for start we just want to do it at the beginning once and then change the flag
-                start_car_detecting = False
-
 
             # DBSCAN filtering is done on the sensor-frame
             filtered_pc = dbscan_utils.filter_cloud(pointcloud, 3.0, 8.0, -0.5, 1.0)
