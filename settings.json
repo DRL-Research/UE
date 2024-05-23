@@ -39,7 +39,7 @@
                     "HorizontalFOVEnd": 90,
                     "DrawDebugPoints": false,
                     "DataFrame": "SensorLocalFrame"
-                }
+                               }
 		},
        "Cameras": {
 			"LeftCam": {
@@ -94,8 +94,8 @@
 				"Pitch": -10, "Roll": 0, "Yaw": 40
 			}
 	  },
-      "X": 0, "Y": -30, "Z": 0,
-      "Pitch": 0, "Roll": 0, "Yaw": 0
+      "X": 25, "Y": 15, "Z": 0,
+      "Pitch": 0, "Roll": 0, "Yaw": 270
     }
   }
 }

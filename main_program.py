@@ -3,14 +3,9 @@ import path_following
 import airsim
 import spline_utils
 import path_control
-from setup_simulation import *
+
 
 if __name__ == '__main__':
-    # we should get the desired definitions of the simulator by the user: update setting.json & update airsim
-    setup_manager = SetupManager()
-    setup_manager.extract_cars()
-
-
     # Create an airsim client instance:
     steering_procedure_manager = path_control.SteeringProcManager()
     airsim_client = airsim.CarClient()
@@ -21,7 +16,7 @@ if __name__ == '__main__':
 
     # Detect the cones and spline points, and return their location:
     print('Starting on-the-fly cone mapping with constant speed and steering procedure.')
-    mapping_data, pursuit_points = cone_mapping.mapping_loop(airsim_client, setup_manager)
+    mapping_data, pursuit_points = cone_mapping.mapping_loop(airsim_client)
     print('Mapping complete!')
 
     # Stop until spline generation is complete:
