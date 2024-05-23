@@ -173,8 +173,8 @@ def mapping_loop(client, setup_manager: SetupManager):
             shmem_setpoint.buf[:8] = struct.pack('d', desired_steer)
             real_steer = struct.unpack('d', shmem_output.buf[:8])[0]
 
-            car_controls.steering = desired_steer
-            client.setCarControls(car_controls)
+            # car_controls.steering = desired_steer
+            # client.setCarControls(car_controls)
             execution_time = time.perf_counter() - last_iteration
             # print(execution_time)
 
