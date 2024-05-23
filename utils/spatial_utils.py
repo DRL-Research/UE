@@ -75,8 +75,6 @@ def set_airsim_pose(airsim_client, desired_position, desired_rot, inherit_z=True
     airsim_client.simSetVehiclePose(initial_pose, ignore_collision=True)
 
 
-
-
 def extract_rotation_from_airsim(orientation):
     # Input should be a Quaternionr() object directly from Airsim.
     # Output is in Airsim coordinate system.
