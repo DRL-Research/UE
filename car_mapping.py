@@ -56,13 +56,12 @@ def show_clusters(model, car2_position, eps, min_samples, points):
 
 def car_detection(airsim_client, points_cloud, lidar_to_map, execution_time, velocity, other_car_name):
     """
-
     :param airsim_client:
-    :param points_cloud:
-    :param lidar_to_map:
+    :param points_cloud: received from the lidar data
+    :param lidar_to_map: lidar to map transition matrix
     :param execution_time:
     :param velocity:
-    :param other_car_name:
+    :param other_car_name: that we want to detect, this is for comparison
     :return:
     """
     other_car_pos_and_orientation = airsim_client.simGetObjectPose(other_car_name)  # contain position + orientation
@@ -101,16 +100,6 @@ def car_detection(airsim_client, points_cloud, lidar_to_map, execution_time, vel
 
 def run_dbscan_params_experiments(filtered_points_cloud, lidar_to_map, execution_time, velocity, yaw,
                                   other_true_pos_eng):
-    """
-
-    :param filtered_points_cloud:
-    :param lidar_to_map:
-    :param execution_time:
-    :param velocity:
-    :param yaw:
-    :param other_true_pos_eng:
-    :return:
-    """
     eps_candidates = [0.3,
                       0.4]  # list(np.arange(0.1, 4.5, 0.1))  # min distance between two points to consider them neighbours
     min_samples_candidates = [2, 3]  # list(np.arange(1, 10, 1))  # min number of neighbours to count as a core point
@@ -131,15 +120,6 @@ def run_dbscan_params_experiments(filtered_points_cloud, lidar_to_map, execution
 
 
 def run_ONE_dbscan_params_experiment(dbscan_model, lidar_to_map, execution_time, curr_vel, other_car_eng_true_position):
-    """
-
-    :param dbscan_model:
-    :param lidar_to_map:
-    :param execution_time:
-    :param curr_vel:
-    :param other_car_eng_true_position:
-    :return:
-    """
     curr_segments, airsim_curr_centroids, curr_labels = dbscan_utils.collate_segmentation(dbscan_model, 1.0)
     airsim_curr_centroids.sort(key=lambda x: np.linalg.norm(x))
     eng_global_centroids = []
