@@ -51,7 +51,7 @@ if __name__ == '__main__':
     print('Starting variable speed spline following procedure.')
     # path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel, transition_matrix)
     positions_lst = path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel, transition_matrix)
-    plots_utils.combine_plot(spline_obj.xi,spline_obj.yi,positions_lst)
+    # plots_utils.combine_plot(spline_obj.xi,spline_obj.yi,positions_lst)
 
     print('Full process complete! stopping vehicle.')
     car_controls.throttle = 0.0

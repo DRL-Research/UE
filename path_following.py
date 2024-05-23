@@ -84,7 +84,10 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
     turn_completed = False
 
     ###################################################################################
-    target_point = [spline_obj.xi[-1], spline_obj.yi[-1]]
+    ## todo תכלס מה שעשיתי, עברתי לעבודה עם המיקומים של איירסים. עושה רושם שזה עובד סבבה עם ערכי יו אנכיים . בערכים אופקיים צריך לשבור את הראש.
+    target_point = [spline_obj.xi[-1] , spline_obj.yi[-1]]
+    # target_point = [(-1) * client.simGetVehiclePose().position.y_val - 15,(-1) * client.simGetVehiclePose().position.x_val + 20]
+    first_position = [client.simGetVehiclePose().position.x_val , client.simGetVehiclePose().position.y_val ]
     while not turn_completed:
         now = time.perf_counter()
 
@@ -104,16 +107,21 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         current_position_global = turn_helper.airsim_point_to_global(current_position_airsim, execution_time=execution_time, curr_vel=curr_vel,
                                                                      transition_matrix=transition_matrix)
 
-        distance_from_target_point = math.sqrt((current_position_global[0] - target_point[0]) ** 2 +
-                                               (current_position_global[1] - target_point[1]) ** 2)
+        # distance_from_target_point = math.sqrt((current_position_global[0] - target_point[0]) ** 2 +
+        #                                        (current_position_global[1] - target_point[1]) ** 2)
+
+        distance_from_target_point = math.sqrt((current_position_airsim[0] - target_point[0]) ** 2 +
+                                                (current_position_airsim[1] - target_point[1]) ** 2)
 
 
         """global positions"""
-        print(f"position {current_position_global}")
+        print(f"position global {current_position_global}")
+        print(f"position airsim {current_position_airsim}")
         # print(f'Steer: {car_controls.steering}')
         print(f'Steer: {client.getCarControls("Car1").steering}')
         print(f"distance_from_target_point = {distance_from_target_point}")
-        current_position_lst.append(current_position_global)
+        current_position_airsim[0] += 2.5 ## todo שמתי לב שיש פער של 25 בין המיקום גלובל למיקום איירסים אז פשוט עשיתי פה 2.5 כדי שהפלוט יצא יפה. אפשר לחשוב על דרך פחות ערבית לעשות את זה .
+        current_position_lst.append(current_position_airsim)
 
 
         if now - start_time_lst >= max_run_time: ## if its miss the distance from the point the car will stop after max_run_time
@@ -125,7 +133,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         ##############################################################################
         curr_heading = np.deg2rad(curr_rot[0])
 
-        if distance_from_target_point < 1.0 and -0.25 <= client.getCarControls("Car1").steering <= 0.25: # bezier follow completed
+        if distance_from_target_point < 3.0 and -0.25 <= client.getCarControls("Car1").steering <= 0.25: # bezier follow completed
 
             # let the car drive in straight line and low speed for few seconds
             car_controls.throttle = 0.2
@@ -150,7 +158,8 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
                 current_position_global = turn_helper.airsim_point_to_global(current_position_airsim, execution_time=execution_time,
                                                                              curr_vel=curr_vel,
                                                                              transition_matrix=transition_matrix)
-                current_position_lst.append(current_position_global)
+                current_position_airsim[0] += 2.5
+                current_position_lst.append(current_position_airsim)
 
             turn_completed = True
 
