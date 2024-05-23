@@ -72,7 +72,7 @@ def mapping_loop(client):
     shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
 
     # Initialize vehicle starting point
-    spatial_utils.set_airsim_pose(client, [0.0, 0.0], [90.0, 0, 0])
+    spatial_utils.set_airsim_pose(client, 'Car1', [0.0, 0.0], [90.0, 0, 0])
     time.sleep(1.0)
 
     # Initialize loop variables
@@ -184,8 +184,8 @@ def mapping_loop(client):
             shmem_setpoint.buf[:8] = struct.pack('d', desired_steer)
             real_steer = struct.unpack('d', shmem_output.buf[:8])[0]
 
-            car_controls.steering = desired_steer
-            client.setCarControls(car_controls)
+            # car_controls.steering = desired_steer
+            # client.setCarControls(car_controls)
             execution_time = time.perf_counter() - last_iteration
             # print(execution_time)
 

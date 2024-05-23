@@ -10,17 +10,5 @@
     "Speed": "0.4",
     "Initial Location":{"X": "2", "Y": "1"},
     "Destination": {"X": "4", "Y": "3"}
-  },
-  "Car-ID-3": {
-    "Name": "Car3",
-    "Speed": "0.4",
-    "Initial Location":{"X": "1", "Y": "2"},
-    "Destination": {"X": "3", "Y": "4"}
-  },
-  "Car-ID-4": {
-    "Name": "Car4",
-    "Speed": "0.4",
-    "Initial Location":{"X": "2", "Y": "2"},
-    "Destination": {"X": "3", "Y": "3"}
   }
 }
