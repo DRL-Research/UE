@@ -11,6 +11,7 @@ import path_control
 import os
 import cv2
 import struct
+from car_mapping import *
 from setup_simulation import *
 
 decimation = 30e9  # Used to save an output image every X iterations.
@@ -69,6 +70,19 @@ def mapping_loop(client, setup_manager: SetupManager):
 
     # Open access to shared memory blocks:
     shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
+
+    # Initialize vehicle starting point
+    # before:  spatial_utils.set_airsim_pose(client, [0.0, 0.0], [90.0, 0, 0])
+    # after:
+    for car_object in setup_manager.cars.values():
+        spatial_utils.set_airsim_pose(client, car_object.name_as_id, car_object.initial_location, [90.0, 0, 0])
+
+    time.sleep(1.0)
+
+    for car_object in setup_manager.cars.values():
+        car_controls = airsim.CarControls()
+        car_controls.throttle = car_object.speed # was just 0.2
+        client.setCarControls(vehicle_name=car_object.name_as_id, controls=car_controls)
 
     # Initialize loop variables
     tracked_cones = []
@@ -173,8 +187,8 @@ def mapping_loop(client, setup_manager: SetupManager):
             shmem_setpoint.buf[:8] = struct.pack('d', desired_steer)
             real_steer = struct.unpack('d', shmem_output.buf[:8])[0]
 
-            # car_controls.steering = desired_steer
-            # client.setCarControls(car_controls)
+            car_controls.steering = desired_steer
+            client.setCarControls(car_controls)
             execution_time = time.perf_counter() - last_iteration
             # print(execution_time)
 

@@ -15,6 +15,8 @@ if __name__ == '__main__':
     time.sleep(1.0)
 
     steering_procedure_manager = path_control.SteeringProcManager()
+    airsim_client = airsim.CarClient()
+    airsim_client.confirmConnection()
 
     airsim_manager = AirsimManager(airsim_client, setup_manager)
 
