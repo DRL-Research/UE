@@ -110,16 +110,6 @@ def estimate_cone_color(hsv_image):
         return ConeTracker.COLOR_UNKNOWN
 
 
-class Car2Tracker(ObjectTracker):
-    def __init__(self, initial_position, id):
-        super().__init__(initial_position)
-        self.id = id
-
-
-
-
-
-
 if __name__ == "__main__":
     tracker_test = ObjectTracker(np.array([0]))
     tracker_test.proximity_distance = 2.0
