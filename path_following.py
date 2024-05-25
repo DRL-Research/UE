@@ -1,5 +1,4 @@
 import math
-import psutil
 import plots_utils
 import turn_helper
 from spline_utils import PathSpline
