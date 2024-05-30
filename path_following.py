@@ -102,25 +102,17 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         z = vehicle_pose.position.z_val
 
         current_position_airsim = [x, y, z]
-
         current_position_global = turn_helper.airsim_point_to_global(current_position_airsim, execution_time=execution_time, curr_vel=curr_vel,
                                                                      transition_matrix=transition_matrix)
 
         # distance_from_target_point = math.sqrt((current_position_global[0] - target_point[0]) ** 2 +
         #                                        (current_position_global[1] - target_point[1]) ** 2)
 
-        distance_from_target_point = math.sqrt((current_position_airsim[0] - target_point[0]) ** 2 +
-                                                (current_position_airsim[1] - target_point[1]) ** 2)
+        distance_from_target_point = math.sqrt((current_position_global[0] - target_point[0]) ** 2 +
+                                                (current_position_global[1] - target_point[1]) ** 2)
 
 
-        """global positions"""
-        print(f"position global {current_position_global}")
-        print(f"position airsim {current_position_airsim}")
-        # print(f'Steer: {car_controls.steering}')
-        print(f'Steer: {client.getCarControls("Car1").steering}')
-        print(f"distance_from_target_point = {distance_from_target_point}")
-        current_position_airsim[0] += 2.5 ## todo שמתי לב שיש פער של 25 בין המיקום גלובל למיקום איירסים אז פשוט עשיתי פה 2.5 כדי שהפלוט יצא יפה. אפשר לחשוב על דרך פחות ערבית לעשות את זה .
-        current_position_lst.append(current_position_airsim)
+
 
 
         if now - start_time_lst >= max_run_time: ## if its miss the distance from the point the car will stop after max_run_time
@@ -130,9 +122,19 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
 
 
         ##############################################################################
-        curr_heading = np.deg2rad(curr_rot[0])
+        #curr_heading = np.deg2rad(spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0])     # this with airsim
 
-        if distance_from_target_point < 3.0 and -0.25 <= client.getCarControls("Car1").steering <= 0.25: # bezier follow completed
+        curr_heading = np.deg2rad(curr_rot[0])
+        """global positions"""
+        print(f"position global {current_position_global}")
+        print(f"position airsim {current_position_airsim}")
+        print(f"object pose: {client.simGetObjectPose('Car1').position}")
+        print(f'heading: {spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0]}')
+        print(f'Steer: {client.getCarControls("Car1").steering}')
+        print(f"distance_from_target_point = {distance_from_target_point}")
+        #current_position_airsim[0] += 2.5  ## todo שמתי לב שיש פער של 25 בין המיקום גלובל למיקום איירסים אז פשוט עשיתי פה 2.5 כדי שהפלוט יצא יפה. אפשר לחשוב על דרך פחות ערבית לעשות את זה .
+        current_position_lst.append(current_position_airsim)
+        if distance_from_target_point < 5.0 and ((-0.25 <= client.getCarControls("Car1").steering <= 0.25) or 88.0<abs(spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0])<=92.0): # bezier follow completed
 
             # let the car drive in straight line and low speed for few seconds
             car_controls.throttle = 0.2
@@ -157,27 +159,29 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
                 current_position_global = turn_helper.airsim_point_to_global(current_position_airsim, execution_time=execution_time,
                                                                              curr_vel=curr_vel,
                                                                              transition_matrix=transition_matrix)
-                current_position_airsim[0] += 2.5
+                #current_position_airsim[0] += 2.5
                 current_position_lst.append(current_position_airsim)
 
             turn_completed = True
 
         # else: ## distance_from_target_point > 0.5:
 
-        desired_speed, desired_steer = follow_handler.calc_ref_speed_steering(curr_pos, curr_vel, curr_heading)
+        desired_speed, desired_steer = follow_handler.calc_ref_speed_steering(current_position_global, curr_vel, curr_heading)
         # Close a control loop over the throttle/speed of the vehicle:
         # throttle_command = speed_controller.velocity_control(desired_speed, 0, curr_vel)
         # throttle_command = np.clip(throttle_command, 0.0, 0.4)
         # car_state = client.getCarState()
         # curr_vel = car_state.speed
         # print(curr_vel)
+        #desired_steer *= -1
+        print(f"desired steer :{desired_steer}")
         desired_steer /= follow_handler.max_steering  # Convert range to [-1, 1]
-        desired_steer = np.clip(desired_steer, -1.0, 1.0)  # maybe we need to play with these values
+        desired_steer = np.clip(desired_steer, -1, 1)  # maybe we need to play with these values
 
         shmem_setpoint.buf[:8] = struct.pack('d', desired_steer)
         real_steer = struct.unpack('d', shmem_output.buf[:8])[0]
 
-        # car_controls.throttle = throttle_command
+        #car_controls.throttle = throttle_command
 
         car_controls.throttle = 0.4
 

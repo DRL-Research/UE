@@ -116,10 +116,10 @@ def mapping_loop(client):
 
             ########################################################################################################################
             current_car1_settings_position = spatial_utils.get_car_settings_position(client,"Car1")
-
+            # here is airsim position
             # print(global_position)
 
-            tracked_points_bezier = turn_helper.create_bezier_curve(client, current_car1_settings_position, execution_time, curr_vel,car1_initial_settings_position,transition_matrix=vehicle_to_map, direction='left')
+            tracked_points_bezier = turn_helper.create_bezier_curve(client, current_car1_settings_position, execution_time, curr_vel,car1_initial_settings_position,transition_matrix=vehicle_to_map, direction='right')
             if tracked_points_bezier is not None:
                 return tracked_points_bezier, execution_time, curr_vel, vehicle_to_map
             ########################################################################################################################

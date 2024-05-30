@@ -45,7 +45,7 @@ if __name__ == '__main__':
     spline_obj.generate_spline(amount=0.1, meters=True, smoothing=1, summation=len(x))
     print('Done!')
 
-    plots_utils.plot_the_spline(spline_obj.xi,spline_obj.yi)
+    plots_utils.plot_the_spline(spline_obj.xi,-1*spline_obj.yi)
 
     # Follow the spline using Stanley's method:
     print('Starting variable speed spline following procedure.')

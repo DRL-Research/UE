@@ -1,3 +1,4 @@
+import spatial_utils
 from spline_utils import PathSpline
 import numpy as np
 import time

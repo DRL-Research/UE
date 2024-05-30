@@ -6,7 +6,7 @@ def plot_the_spline(xi, yi):
     plt.figure(figsize=(10, 6))
     plt.cla()
     ax = plt.gca()
-    ax.invert_xaxis()
+    #ax.invert_xaxis()
     plt.plot(yi, xi, label='Line Plot')
 
     # Add labels and title
@@ -25,7 +25,7 @@ def plot_the_car_path(points):
     plt.figure(figsize=(10, 6))
     plt.cla()
     ax = plt.gca()
-    ax.invert_xaxis()
+    #ax.invert_xaxis()
 
     # Extract x and y coordinates
     x_coords = [point[0] for point in points]
@@ -50,7 +50,7 @@ def combine_plot(xi, yi, points):
     plt.figure(figsize=(10, 6))
     plt.cla()
     ax = plt.gca()
-    ax.invert_xaxis()
+    #ax.invert_xaxis()
 
     x_coords = [point[0] for point in points]
     y_coords = [point[1] for point in points]
@@ -59,10 +59,12 @@ def combine_plot(xi, yi, points):
     # y_coords = y_coords[::8]
 
     print('-' * 75)
-    print(f"route start at: {xi[0], yi[0]}")
+    # -1 to convert to airsim for the plot
+    print(f"route start at: {xi[0], -1*yi[0]}")
     print(f"car start: {points[0][0], points[0][1]}")
     print('-' * 75)
-    plt.plot(yi, xi,color='red', label='bezier')
+    # -1 to convert to airsim for the plot
+    plt.plot(-1*yi, xi,color='red', label='bezier')
     # plt.plot(y_coords, x_coords, marker='o', linestyle='-',color='green',label='actual')
     plt.plot(y_coords, x_coords, color='green', label='actual')
 
