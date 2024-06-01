@@ -12,7 +12,7 @@ import turn_helper
 if __name__ == '__main__':
     # Create an airsim client instance:
     steering_procedure_manager = path_control.SteeringProcManager()
-    moving_car_name = 'Car2'
+    moving_car_name = "Car1"
     airsim_client = airsim.CarClient()
     airsim_client.confirmConnection()
     airsim_client.enableApiControl(True, vehicle_name=moving_car_name)
@@ -48,8 +48,7 @@ if __name__ == '__main__':
     # Follow the spline using Stanley's method:
     print('Starting variable speed spline following procedure.')
     # path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel, transition_matrix)
-    positions_lst = path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel,
-                                                  transition_matrix, moving_car_name=moving_car_name)
+    positions_lst = path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel, transition_matrix,moving_car_name=moving_car_name)
     # plots_utils.combine_plot(spline_obj.xi,spline_obj.yi,positions_lst)
 
     print('Full process complete! stopping vehicle.')
@@ -57,6 +56,8 @@ if __name__ == '__main__':
     car_controls.brake = 1.0
     airsim_client.setCarControls(car_controls, vehicle_name=moving_car_name)
     steering_procedure_manager.terminate_steering_procedure()
+
+
 
 
     # # Record the start time
