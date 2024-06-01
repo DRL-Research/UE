@@ -100,9 +100,9 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         x = vehicle_pose.position.x_val
         y = vehicle_pose.position.y_val
         z = vehicle_pose.position.z_val
-
+        rot = spatial_utils.extract_rotation_from_airsim(client.simGetVehiclePose().orientation)
         current_position_airsim = [x, y, z]
-        current_position_global = turn_helper.airsim_point_to_global(current_position_airsim, execution_time=execution_time, curr_vel=curr_vel,
+        current_position_global = turn_helper.airsim_point_to_global(current_position_airsim,execution_time=execution_time, curr_vel=curr_vel,
                                                                      transition_matrix=transition_matrix)
 
         # distance_from_target_point = math.sqrt((current_position_global[0] - target_point[0]) ** 2 +

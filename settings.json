@@ -94,8 +94,8 @@
 				"Pitch": -10, "Roll": 0, "Yaw": 40
 			}
 	  },
-      "X": -25, "Y":0, "Z": 0,
-      "Pitch": 0, "Roll": 0, "Yaw": 0
+      "X": -30, "Y":-20, "Z": 0,
+      "Pitch": 0, "Roll": 0, "Yaw": 90
     },
     "Car3": {
       "VehicleType": "PhysXCar",

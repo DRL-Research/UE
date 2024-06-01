@@ -76,7 +76,7 @@ def mapping_loop(client):
     shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
 
     # Initialize vehicle starting point
-    # spatial_utils.set_airsim_pose(client, [0.0, 0.0], [90.0, 0, 0])
+    spatial_utils.set_airsim_pose(client, [0.0, 0.0], [180.0, 0, 0])
     time.sleep(1.0)
     car_controls = airsim.CarControls()
     car_controls.throttle = 0.2
