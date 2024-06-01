@@ -12,24 +12,22 @@ import turn_helper
 if __name__ == '__main__':
     # Create an airsim client instance:
     steering_procedure_manager = path_control.SteeringProcManager()
+    moving_car_name = 'Car2'
     airsim_client = airsim.CarClient()
     airsim_client.confirmConnection()
-    airsim_client.enableApiControl(True)
-
-
-
+    airsim_client.enableApiControl(True, vehicle_name=moving_car_name)
     # Detect the cones and spline points, and return their location:
     print('Starting on-the-fly cone mapping with constant speed and steering procedure.')
     #mapping_data, pursuit_points = cone_mapping.mapping_loop(airsim_client)
-    tracked_points,execution_time,curr_vel,transition_matrix = cone_mapping.mapping_loop(airsim_client)
+    tracked_points,execution_time,curr_vel,transition_matrix = cone_mapping.mapping_loop(airsim_client, moving_car_name)
 
     print('Mapping complete!')
 
     # Stop until spline generation is complete:
     print('Stopping vehicle and generating a path to follow...')
-    car_controls = airsim_client.getCarControls()
+    car_controls = airsim_client.getCarControls(vehicle_name=moving_car_name)
     car_controls.throttle = 0.0
-    airsim_client.setCarControls(car_controls)
+    airsim_client.setCarControls(car_controls, vehicle_name=moving_car_name)
 
     # Arrange the points and generate a path spline:
     #track_points = spline_utils.generate_path_points(mapping_data)
@@ -50,16 +48,15 @@ if __name__ == '__main__':
     # Follow the spline using Stanley's method:
     print('Starting variable speed spline following procedure.')
     # path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel, transition_matrix)
-    positions_lst = path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel, transition_matrix)
+    positions_lst = path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel,
+                                                  transition_matrix, moving_car_name=moving_car_name)
     # plots_utils.combine_plot(spline_obj.xi,spline_obj.yi,positions_lst)
 
     print('Full process complete! stopping vehicle.')
     car_controls.throttle = 0.0
     car_controls.brake = 1.0
-    airsim_client.setCarControls(car_controls)
+    airsim_client.setCarControls(car_controls, vehicle_name=moving_car_name)
     steering_procedure_manager.terminate_steering_procedure()
-
-
 
 
     # # Record the start time

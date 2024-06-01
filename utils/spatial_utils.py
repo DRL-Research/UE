@@ -45,14 +45,14 @@ def camera_to_eng(pos):
     return new_pos
 
 
-def set_airsim_pose(airsim_client, desired_position, desired_rot, inherit_z=True):
+def set_airsim_pose(airsim_client, desired_position, desired_rot, inherit_z=True, moving_car_name='Car1'):
     # Input is in ENG coordinate system!
     # Both desired position and rotation must have 3 elements: [x,y,z] and [yaw,pitch,roll].
     # Converts to Airsim and sends to client.
 
     desired_position = np.array(desired_position)  # To accept lists as well.
     desired_rot = np.array(desired_rot)  # To accept lists as well.
-    initial_pose = airsim_client.simGetVehiclePose()
+    initial_pose = airsim_client.simGetVehiclePose(vehicle_name=moving_car_name)
 
     if inherit_z:
         desired_position = np.append(desired_position, -initial_pose.position.z_val)
@@ -72,7 +72,7 @@ def set_airsim_pose(airsim_client, desired_position, desired_rot, inherit_z=True
     initial_pose.position.z_val = pos[2]
 
     # Send results to client:
-    airsim_client.simSetVehiclePose(initial_pose, ignore_collision=True)
+    airsim_client.simSetVehiclePose(initial_pose, ignore_collision=True, vehicle_name=moving_car_name)
 
 
 def extract_rotation_from_airsim(orientation):
@@ -126,6 +126,8 @@ def tf_matrix_from_airsim_object(actor_pose):
     position = np.array([actor_pose.position.x_val, actor_pose.position.y_val, actor_pose.position.z_val])
     yaw_pitch_roll = extract_rotation_from_airsim(actor_pose.orientation)
     pos, rot = convert_eng_airsim(position, yaw_pitch_roll)
+    # NOTE - for a car in yaw = 180, a user should uncomment the next line.
+    # rot = np.array([0, 0, 0])
     return tf_matrix_from_eng_pose(pos, rot)
 
 

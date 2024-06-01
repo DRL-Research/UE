@@ -45,7 +45,7 @@ def process_camera(lidar_to_cam, vector, camera, image, tracked_cone, idx, copy_
 
 
 
-def mapping_loop(client):
+def mapping_loop(client, moving_car_name='Car1'):
 
     global decimation
     image_dest = os.path.join(os.getcwd(), 'images')
@@ -76,11 +76,11 @@ def mapping_loop(client):
     shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
 
     # Initialize vehicle starting point
-    spatial_utils.set_airsim_pose(client, [0.0, 0.0], [180.0, 0, 0])
+    spatial_utils.set_airsim_pose(client, [0.0, 0.0], [0.0, 0, 0], moving_car_name)
     time.sleep(1.0)
     car_controls = airsim.CarControls()
     car_controls.throttle = 0.2
-    client.setCarControls(car_controls)
+    client.setCarControls(car_controls, vehicle_name=moving_car_name)
 
     # Initialize loop variables
     tracked_cones = []
@@ -97,7 +97,7 @@ def mapping_loop(client):
     idx = 0
     save_idx = 0
     #############################################################################################################
-    car1_initial_settings_position = spatial_utils.get_car_settings_position(client,"Car1")
+    car1_initial_settings_position = spatial_utils.get_car_settings_position(client, moving_car_name)
     #############################################################################################################
     while last_iteration - start_time < 300:
         now = time.perf_counter()
@@ -105,21 +105,23 @@ def mapping_loop(client):
 
         if delta_time > sample_time:
             last_iteration = time.perf_counter()
-            vehicle_pose = client.simGetVehiclePose()
-
+            vehicle_pose = client.simGetVehiclePose(vehicle_name=moving_car_name)
 
             vehicle_to_map = spatial_utils.tf_matrix_from_airsim_object(vehicle_pose)
             map_to_vehicle = np.linalg.inv(vehicle_to_map)
             lidar_to_map = np.matmul(vehicle_to_map, lidar_to_vehicle)
-            car_state = client.getCarState()
+            car_state = client.getCarState(vehicle_name=moving_car_name)
             curr_vel = car_state.speed
 
             ########################################################################################################################
-            current_car1_settings_position = spatial_utils.get_car_settings_position(client,"Car1")
+            current_car1_settings_position = spatial_utils.get_car_settings_position(client, moving_car_name)
             # here is airsim position
             # print(global_position)
 
-            tracked_points_bezier = turn_helper.create_bezier_curve(client, current_car1_settings_position, execution_time, curr_vel,car1_initial_settings_position,transition_matrix=vehicle_to_map, direction='right')
+            tracked_points_bezier = turn_helper.create_bezier_curve(client, current_car1_settings_position, execution_time,
+                                                                    curr_vel,car1_initial_settings_position,
+                                                                    transition_matrix=vehicle_to_map, direction='right',
+                                                                    moving_car_name=moving_car_name)
             if tracked_points_bezier is not None:
                 return tracked_points_bezier, execution_time, curr_vel, vehicle_to_map
             ########################################################################################################################

@@ -14,7 +14,8 @@ import csv
 import os
 
 
-def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, transition_matrix=None):
+def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None,
+                   transition_matrix=None, moving_car_name='Car1'):
     data_dest = os.path.join(os.getcwd(), 'recordings')
     os.makedirs(data_dest, exist_ok=True)
     save_data = False
@@ -42,7 +43,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         y *= -1
         spline_obj = PathSpline(x, y)
         spline_obj.generate_spline(0.1, smoothing=1)
-        spatial_utils.set_airsim_pose(client, [0.0, 0.0], [90.0, 0, 0])
+        spatial_utils.set_airsim_pose(client, [0.0, 0.0], [90.0, 0, 0], moving_car_name=moving_car_name)
 
     # Define Stanley-method parameters:
     follow_handler = path_control.StanleyFollower(spline_obj)
@@ -66,7 +67,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
     leaving_distance = 10.0
     entering_distance = 4.0
 
-    car_controls = airsim.CarControls("Car1")
+    car_controls = airsim.CarControls()
     car_data = np.ndarray(shape=(0, 8))
 
     start_time = time.perf_counter()
@@ -86,13 +87,14 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
     ## todo תכלס מה שעשיתי, עברתי לעבודה עם המיקומים של איירסים. עושה רושם שזה עובד סבבה עם ערכי יו אנכיים . בערכים אופקיים צריך לשבור את הראש.
     target_point = [spline_obj.xi[-1] , spline_obj.yi[-1]]
     # target_point = [(-1) * client.simGetVehiclePose().position.y_val - 15,(-1) * client.simGetVehiclePose().position.x_val + 20]
-    first_position = [client.simGetVehiclePose().position.x_val , client.simGetVehiclePose().position.y_val ]
+    first_position = [client.simGetVehiclePose(vehicle_name=moving_car_name).position.x_val,
+                      client.simGetVehiclePose(vehicle_name=moving_car_name).position.y_val ]
     while not turn_completed:
         now = time.perf_counter()
 
-        vehicle_pose = client.simGetVehiclePose()
+        vehicle_pose = client.simGetVehiclePose(vehicle_name=moving_car_name)
         vehicle_to_map = spatial_utils.tf_matrix_from_airsim_object(vehicle_pose)
-        car_state = client.getCarState()
+        car_state = client.getCarState(vehicle_name=moving_car_name)
         curr_vel = car_state.speed
         curr_pos, curr_rot = spatial_utils.extract_pose_from_airsim(vehicle_pose)
         ###############################################################################################
@@ -100,7 +102,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         x = vehicle_pose.position.x_val
         y = vehicle_pose.position.y_val
         z = vehicle_pose.position.z_val
-        rot = spatial_utils.extract_rotation_from_airsim(client.simGetVehiclePose().orientation)
+        rot = spatial_utils.extract_rotation_from_airsim(client.simGetVehiclePose(vehicle_name=moving_car_name).orientation)
         current_position_airsim = [x, y, z]
         current_position_global = turn_helper.airsim_point_to_global(current_position_airsim,execution_time=execution_time, curr_vel=curr_vel,
                                                                      transition_matrix=transition_matrix)
@@ -128,18 +130,18 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         """global positions"""
         print(f"position global {current_position_global}")
         print(f"position airsim {current_position_airsim}")
-        print(f"object pose: {client.simGetObjectPose('Car1').position}")
+        print(f"object pose: {client.simGetObjectPose(moving_car_name).position}")
         print(f'heading: {spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0]}')
-        print(f'Steer: {client.getCarControls("Car1").steering}')
+        print(f'Steer: {client.getCarControls(moving_car_name).steering}')
         print(f"distance_from_target_point = {distance_from_target_point}")
         #current_position_airsim[0] += 2.5  ## todo שמתי לב שיש פער של 25 בין המיקום גלובל למיקום איירסים אז פשוט עשיתי פה 2.5 כדי שהפלוט יצא יפה. אפשר לחשוב על דרך פחות ערבית לעשות את זה .
         current_position_lst.append(current_position_airsim)
-        if distance_from_target_point < 5.0 and ((-0.25 <= client.getCarControls("Car1").steering <= 0.25) or 88.0<abs(spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0])<=92.0): # bezier follow completed
+        if distance_from_target_point < 5.0 and ((-0.25 <= client.getCarControls(vehicle_name=moving_car_name).steering <= 0.25) or 88.0<abs(spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0])<=92.0): # bezier follow completed
 
             # let the car drive in straight line and low speed for few seconds
             car_controls.throttle = 0.2
             car_controls.steering = 0.0
-            client.setCarControls(car_controls)
+            client.setCarControls(car_controls, vehicle_name=moving_car_name)
 
             t = time.perf_counter()
             while True:  ## keep drive staright for 5 seconds after we finished the turn
@@ -149,7 +151,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
                     print("5 seconds have passed. Exiting the loop.")
                     break
 
-                vehicle_pose = client.simGetVehiclePose("Car1")
+                vehicle_pose = client.simGetVehiclePose(vehicle_name=moving_car_name)
                 x = vehicle_pose.position.x_val
                 y = vehicle_pose.position.y_val
                 z = vehicle_pose.position.z_val
@@ -186,7 +188,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         car_controls.throttle = 0.4
 
         car_controls.steering = real_steer
-        client.setCarControls(car_controls)
+        client.setCarControls(car_controls, vehicle_name='Car2')
 
     plots_utils.plot_the_car_path(current_position_lst)
     plots_utils.combine_plot(spline_obj.xi, spline_obj.yi, current_position_lst)

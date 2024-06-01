@@ -48,7 +48,9 @@ def get_other_position_ref_to_self(self_pos, other_pos):
     # return [x, y, z]
 
 
-def get_points_for_bezier_curve(current_car1_settings_position, execution_time, curr_vel, transition_matrix, direction,client): #todo need to check this function
+def get_points_for_bezier_curve(current_car1_settings_position, execution_time, curr_vel,
+                                transition_matrix, direction,client,
+                                moving_car_name): #todo need to check this function
 
     # # yaw 0
     # if direction == 'right':
@@ -103,11 +105,11 @@ def get_points_for_bezier_curve(current_car1_settings_position, execution_time, 
         # control_point_settings_position = [current_car1_settings_position.x_val + 20, current_car1_settings_position.y_val,
         #                                    current_car1_settings_position.z_val]
 
-        destination_point_settings_position = [client.simGetVehiclePose().position.x_val + 30,
-                                               client.simGetVehiclePose().position.y_val + 20,
+        destination_point_settings_position = [client.simGetVehiclePose(vehicle_name=moving_car_name).position.x_val - 30,
+                                               client.simGetVehiclePose(vehicle_name=moving_car_name).position.y_val + 20,
                                                current_car1_settings_position.z_val]
-        control_point_settings_position = [client.simGetVehiclePose().position.x_val + 30,
-                                           client.simGetVehiclePose().position.y_val,
+        control_point_settings_position = [client.simGetVehiclePose(vehicle_name=moving_car_name).position.x_val - 30,
+                                           client.simGetVehiclePose(vehicle_name=moving_car_name).position.y_val,
                                            current_car1_settings_position.z_val]
 
     else:  # direction == left
@@ -146,9 +148,12 @@ def get_points_for_bezier_curve(current_car1_settings_position, execution_time, 
     control_point = np.array([control_x, control_y])
     print(f"destination from airsim : {destination_point}")
     print(f"destination from global : {destination_point_global}")
+    print(f'Control point: {control_x, control_y}')
     return destination_point_global, control_point_global
 
-def create_bezier_curve(client, current_car1_settings_position, execution_time, curr_vel, car1_initial_settings_position, transition_matrix, direction):
+def create_bezier_curve(client, current_car1_settings_position, execution_time, curr_vel,
+                        car1_initial_settings_position, transition_matrix, direction,
+                        moving_car_name):
 
     # Calculate the Euclidean distance
     distance_from_car1_initial_settings_position = math.sqrt((current_car1_settings_position.x_val - car1_initial_settings_position.x_val) ** 2 +
@@ -159,15 +164,16 @@ def create_bezier_curve(client, current_car1_settings_position, execution_time, 
     if 2.5 <= distance_from_car1_initial_settings_position <= 2.7:
         destination_point_global, control_point_global = get_points_for_bezier_curve(current_car1_settings_position,
                                                                                      execution_time, curr_vel,
-                                                                                    transition_matrix,direction,client)
+                                                                                    transition_matrix,direction,client,
+                                                                                     moving_car_name)
         # now it not global, its airsim after i changed it
         # destination_point_global = np.array([33.5,17.5])
         # control_point_global = np.array([13.5,17.5])
 
         x_set_start = car1_initial_settings_position.x_val
         y_set_start = car1_initial_settings_position.y_val
-        x_start = client.simGetVehiclePose().position.x_val
-        y_start = client.simGetVehiclePose().position.y_val
+        x_start = client.simGetVehiclePose(vehicle_name=moving_car_name).position.x_val
+        y_start = client.simGetVehiclePose(vehicle_name=moving_car_name).position.y_val
         start_point = np.array([x_start,y_start])  # beacause this is the start point ref to car 1
 
         # start_point = np.array([0.0, 0.0])  # beacause this is the start point ref to car 1
