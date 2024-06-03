@@ -87,6 +87,8 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
     target_point = [spline_obj.xi[-1] , spline_obj.yi[-1]]
     # target_point = [(-1) * client.simGetVehiclePose().position.y_val - 15,(-1) * client.simGetVehiclePose().position.x_val + 20]
     first_position = [client.simGetVehiclePose().position.x_val , client.simGetVehiclePose().position.y_val ]
+    initial_yaw = spatial_utils.extract_rotation_from_airsim(
+        client.simGetVehiclePose(moving_car_name).orientation)[0]
     while not turn_completed:
         now = time.perf_counter()
 
@@ -126,6 +128,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
 
         curr_heading = np.deg2rad(curr_rot[0])
         """global positions"""
+        print(f"vechicle pose {client.simGetVehiclePose(moving_car_name).position}")
         print(f"position global {current_position_global}")
         print(f"position airsim {current_position_airsim}")
         print(f"object pose: {client.simGetObjectPose('Car1').position}")
@@ -134,7 +137,11 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         print(f"distance_from_target_point = {distance_from_target_point}")
         #current_position_airsim[0] += 2.5  ## todo שמתי לב שיש פער של 25 בין המיקום גלובל למיקום איירסים אז פשוט עשיתי פה 2.5 כדי שהפלוט יצא יפה. אפשר לחשוב על דרך פחות ערבית לעשות את זה .
         current_position_lst.append(current_position_airsim)
-        if distance_from_target_point < 5.0 and ((-0.25 <= client.getCarControls("Car1").steering <= 0.25) or 88.0<abs(spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0])<=92.0): # bezier follow completed
+        if distance_from_target_point < 5.0 and \
+                ((-0.25 <= client.getCarControls("Car1").steering <= 0.25) or
+                 (88.0<abs(spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0])<=92.0) or   # turn left and right from yaw 0/180
+                 (-2.0<spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0]<=2.0 ) or        # turn left from yaw 90
+                (178.0<abs(spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0])<=182.0 )): # turn right from yaw 90
 
             # let the car drive in straight line and low speed for few seconds
             car_controls.throttle = 0.2

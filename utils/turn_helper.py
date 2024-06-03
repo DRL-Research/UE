@@ -84,22 +84,47 @@ def get_points_for_bezier_curve(current_car1_settings_position, initial_yaw, exe
             control_point_settings_position = [current_car1_settings_position.x_val - 20,
                                                current_car1_settings_position.y_val,
                                                current_car1_settings_position.z_val]
-    elif 89<= abs(initial_yaw) <= 91:  # yaw = 90
+    elif 89<= initial_yaw <= 91:  # yaw = 90
         if direction == 'right':
-            destination_point_settings_position = [vehicle_pose.position.x_val + 10,
-                                                   vehicle_pose.position.y_val + 20,
-                                                   current_car1_settings_position.z_val]
+            destination_point_settings_position = [
+                vehicle_pose.position.x_val - 10,  # Switched this line
+                vehicle_pose.position.y_val + 20,  # With this line
+                current_car1_settings_position.z_val]
+
             control_point_settings_position = [vehicle_pose.position.x_val,
-                                               vehicle_pose.position.y_val + 20,
+                                               vehicle_pose.position.y_val+20,
                                                current_car1_settings_position.z_val]
 
         else:  # direction == left
-            destination_point_settings_position = [current_car1_settings_position.x_val - 20,
-                                                   current_car1_settings_position.y_val + 10,
-                                                   current_car1_settings_position.z_val]
-            control_point_settings_position = [current_car1_settings_position.x_val - 20,
-                                               current_car1_settings_position.y_val,
+            destination_point_settings_position = [
+                vehicle_pose.position.x_val + 10,  # Switched this line
+                vehicle_pose.position.y_val + 20,  # With this line
+                current_car1_settings_position.z_val]
+
+            control_point_settings_position = [vehicle_pose.position.x_val,
+                                               vehicle_pose.position.y_val+20,
                                                current_car1_settings_position.z_val]
+    else:       # yaw -90 or 270
+        if direction == 'right':
+            destination_point_settings_position = [
+                vehicle_pose.position.x_val + 10,  # Switched this line
+                vehicle_pose.position.y_val - 15,  # With this line
+                current_car1_settings_position.z_val]
+
+            control_point_settings_position = [vehicle_pose.position.x_val,
+                                               vehicle_pose.position.y_val - 15,
+                                               current_car1_settings_position.z_val]
+
+        else:  # direction == left
+            destination_point_settings_position = [
+                vehicle_pose.position.x_val - 10,  # Switched this line
+                vehicle_pose.position.y_val - 20,  # With this line
+                current_car1_settings_position.z_val]
+
+            control_point_settings_position = [vehicle_pose.position.x_val,
+                                               vehicle_pose.position.y_val - 20,
+                                               current_car1_settings_position.z_val]
+
 
     destination_point_global = airsim_point_to_global(destination_point_settings_position, execution_time, curr_vel, transition_matrix)
 
