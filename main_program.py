@@ -29,15 +29,8 @@ if __name__ == '__main__':
     car_controls.throttle = 0.0
     airsim_client.setCarControls(car_controls, vehicle_name=moving_car_name)
 
-    # Arrange the points and generate a path spline:
-    #track_points = spline_utils.generate_path_points(mapping_data)
-    #spline_obj = spline_utils.PathSpline(tracked_points[::2, 0], tracked_points[::2, 1])
-
-
     x = [sublist[0] for sublist in tracked_points[::2]]
     y = [sublist[1] for sublist in tracked_points[::2]]
-
-    # check_lst = [[x[i], y[i]] for i in range(len(x))]
 
     spline_obj = spline_utils.PathSpline(x, y)
     spline_obj.generate_spline(amount=0.1, meters=True, smoothing=1, summation=len(x))
@@ -47,7 +40,6 @@ if __name__ == '__main__':
 
     # Follow the spline using Stanley's method:
     print('Starting variable speed spline following procedure.')
-    # path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel, transition_matrix)
     positions_lst = path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel, transition_matrix,moving_car_name=moving_car_name)
     # plots_utils.combine_plot(spline_obj.xi,spline_obj.yi,positions_lst)
 

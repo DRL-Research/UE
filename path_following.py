@@ -66,7 +66,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
     leaving_distance = 10.0
     entering_distance = 4.0
 
-    car_controls = airsim.CarControls("Car1")
+    car_controls = airsim.CarControls(moving_car_name)
     car_data = np.ndarray(shape=(0, 8))
 
     start_time = time.perf_counter()
@@ -76,69 +76,53 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
     ###################################################################################
 
     current_position_lst = []
-    start_time_hey = time.perf_counter()  # Initialize the start time for 'hey' printing
     start_time_lst = time.perf_counter()
-    current_position_interval = 0.5 ## every this time i see the point in the plot of the car route and the print
     max_run_time = 60
     turn_completed = False
 
     ###################################################################################
-    ## todo תכלס מה שעשיתי, עברתי לעבודה עם המיקומים של איירסים. עושה רושם שזה עובד סבבה עם ערכי יו אנכיים . בערכים אופקיים צריך לשבור את הראש.
+
     target_point = [spline_obj.xi[-1] , spline_obj.yi[-1]]
-    # target_point = [(-1) * client.simGetVehiclePose().position.y_val - 15,(-1) * client.simGetVehiclePose().position.x_val + 20]
     first_position = [client.simGetVehiclePose().position.x_val , client.simGetVehiclePose().position.y_val ]
     initial_yaw = spatial_utils.extract_rotation_from_airsim(
         client.simGetVehiclePose(moving_car_name).orientation)[0]
     while not turn_completed:
         now = time.perf_counter()
 
-        vehicle_pose = client.simGetVehiclePose()
+        vehicle_pose = client.simGetVehiclePose(moving_car_name)
         vehicle_to_map = spatial_utils.tf_matrix_from_airsim_object(vehicle_pose)
         car_state = client.getCarState()
         curr_vel = car_state.speed
         curr_pos, curr_rot = spatial_utils.extract_pose_from_airsim(vehicle_pose)
         ###############################################################################################
 
-        x = vehicle_pose.position.x_val
-        y = vehicle_pose.position.y_val
-        z = vehicle_pose.position.z_val
-        rot = spatial_utils.extract_rotation_from_airsim(client.simGetVehiclePose().orientation)
-        current_position_airsim = [x, y, z]
+        rot_airsim = spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)       # yaw, pitch, roll
+        current_position_airsim = [vehicle_pose.position.x_val, vehicle_pose.position.y_val, vehicle_pose.position.z_val]
         current_position_global = turn_helper.airsim_point_to_global(current_position_airsim,execution_time=execution_time, curr_vel=curr_vel,
                                                                      transition_matrix=transition_matrix)
-
-        # distance_from_target_point = math.sqrt((current_position_global[0] - target_point[0]) ** 2 +
-        #                                        (current_position_global[1] - target_point[1]) ** 2)
 
         distance_from_target_point = math.sqrt((current_position_global[0] - target_point[0]) ** 2 +
                                                 (current_position_global[1] - target_point[1]) ** 2)
 
-
-
-
-
         if now - start_time_lst >= max_run_time: ## if its miss the distance from the point the car will stop after max_run_time
-            # print(lst)
             plots_utils.plot_the_car_path(current_position_lst)
             return current_position_lst
 
 
         ##############################################################################
-        #curr_heading = np.deg2rad(spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0])     # this with airsim
-
         curr_heading = np.deg2rad(curr_rot[0])
         """global positions"""
         print(f"vechicle pose {client.simGetVehiclePose(moving_car_name).position}")
         print(f"position global {current_position_global}")
         print(f"position airsim {current_position_airsim}")
         print(f"object pose: {client.simGetObjectPose('Car1').position}")
-        print(f'heading: {spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0]}')
+        print(f'heading: {curr_rot[0]}')
         print(f'Steer: {client.getCarControls("Car1").steering}')
         print(f"distance_from_target_point = {distance_from_target_point}")
-        #current_position_airsim[0] += 2.5  ## todo שמתי לב שיש פער של 25 בין המיקום גלובל למיקום איירסים אז פשוט עשיתי פה 2.5 כדי שהפלוט יצא יפה. אפשר לחשוב על דרך פחות ערבית לעשות את זה .
+
         current_position_lst.append(current_position_airsim)
         if distance_from_target_point < 5.0 and \
-                ((-0.25 <= client.getCarControls("Car1").steering <= 0.25) or
+                ((-0.25 <= client.getCarControls("Car1").steering <= 0.25) or   # todo: maybe no need for steer
                  (88.0<abs(spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0])<=92.0) or   # turn left and right from yaw 0/180
                  (-1<spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0]<=1 ) or        # turn left from yaw 90
                 (178.0<abs(spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0])<=182.0 )): # turn right from yaw 90
@@ -156,17 +140,12 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
                     print("5 seconds have passed. Exiting the loop.")
                     break
 
-                vehicle_pose = client.simGetVehiclePose("Car1")
-                x = vehicle_pose.position.x_val
-                y = vehicle_pose.position.y_val
-                z = vehicle_pose.position.z_val
-
-                current_position_airsim = [x, y, z]
+                vehicle_pose = client.simGetVehiclePose(moving_car_name)
+                current_position_airsim = [vehicle_pose.position.x_val,vehicle_pose.position.y_val, vehicle_pose.position.z_val]
 
                 current_position_global = turn_helper.airsim_point_to_global(current_position_airsim, execution_time=execution_time,
                                                                              curr_vel=curr_vel,
                                                                              transition_matrix=transition_matrix)
-                #current_position_airsim[0] += 2.5
                 current_position_lst.append(current_position_airsim)
 
             turn_completed = True
@@ -201,8 +180,9 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
     return current_position_lst
 
 
-
-        # if save_data:
+    """
+    # we dont use this section
+    # if save_data:
         #     car_data = np.append(car_data,
         #                          [[curr_pos[0], curr_pos[1], curr_rot[0],
         #                            desired_speed, car_state.speed,
@@ -224,6 +204,8 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
             writer.writerows(car_data)
         print('saved csv data')
     return pickling_objects, car_data
+    """
+
 
 
 if __name__ == '__main__':
