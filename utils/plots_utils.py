@@ -20,7 +20,7 @@ def plot_the_spline(xi, yi):
     # Display the plot
     plt.show()
 
-def plot_the_car_path(points):
+def plot_vehicle_relative_path(points):
 
     plt.figure(figsize=(10, 6))
     plt.cla()
@@ -42,6 +42,26 @@ def plot_the_car_path(points):
 
     # # Reverse the x-axis
     # plt.xlim(max(x_coords), min(x_coords))
+
+    plt.grid(True)
+    plt.show()
+
+def plot_vehicle_object_path(points):
+    # todo: modify function to plot all vehicle paths - will get list of ponits for each vehcile
+    #
+    plt.figure(figsize=(10, 6))
+    ax = plt.gca()
+    ax.invert_yaxis()
+
+    # Extract x and y coordinates
+    x_coords = [point[0] for point in points]
+    y_coords = [point[1] for point in points]
+
+    # Plotting with reversed x-axis
+    plt.plot(x_coords,y_coords, marker='o', linestyle='-')
+    plt.title('The Car Actual Path')
+    plt.xlabel('X Coordinate')
+    plt.ylabel('Y Coordinate')
 
     plt.grid(True)
     plt.show()

@@ -75,7 +75,8 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
 
     ###################################################################################
 
-    current_position_lst = []
+    current_vehicle_positions_lst = []
+    current_object_positions_lst = []
     start_time_lst = time.perf_counter()
     max_run_time = 60
     turn_completed = False
@@ -90,6 +91,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         now = time.perf_counter()
 
         vehicle_pose = client.simGetVehiclePose(moving_car_name)
+
         vehicle_to_map = spatial_utils.tf_matrix_from_airsim_object(vehicle_pose)
         car_state = client.getCarState()
         curr_vel = car_state.speed
@@ -100,13 +102,14 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         current_position_airsim = [vehicle_pose.position.x_val, vehicle_pose.position.y_val, vehicle_pose.position.z_val]
         current_position_global = turn_helper.airsim_point_to_global(current_position_airsim,execution_time=execution_time, curr_vel=curr_vel,
                                                                      transition_matrix=transition_matrix)
-
+        current_object_pose_position = client.simGetObjectPose(moving_car_name).position
+        current_object_pose_position = [current_object_pose_position.x_val, current_object_pose_position.y_val, current_object_pose_position.z_val]
         distance_from_target_point = math.sqrt((current_position_global[0] - target_point[0]) ** 2 +
                                                 (current_position_global[1] - target_point[1]) ** 2)
 
         if now - start_time_lst >= max_run_time: ## if its miss the distance from the point the car will stop after max_run_time
-            plots_utils.plot_the_car_path(current_position_lst)
-            return current_position_lst
+            plots_utils.plot_vehicle_relative_path(current_vehicle_positions_lst)
+            return current_vehicle_positions_lst
 
 
         ##############################################################################
@@ -120,7 +123,8 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         print(f'Steer: {client.getCarControls("Car1").steering}')
         print(f"distance_from_target_point = {distance_from_target_point}")
 
-        current_position_lst.append(current_position_airsim)
+        current_vehicle_positions_lst.append(current_position_airsim)        # used for plotting
+        current_object_positions_lst.append(current_object_pose_position)
         if distance_from_target_point < 5.0 and \
                 ((-0.25 <= client.getCarControls("Car1").steering <= 0.25) or   # todo: maybe no need for steer
                  (88.0<abs(spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0])<=92.0) or   # turn left and right from yaw 0/180
@@ -146,8 +150,11 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
                 current_position_global = turn_helper.airsim_point_to_global(current_position_airsim, execution_time=execution_time,
                                                                              curr_vel=curr_vel,
                                                                              transition_matrix=transition_matrix)
-                current_position_lst.append(current_position_airsim)
-
+                current_object_pose_position = client.simGetObjectPose(moving_car_name).position
+                current_object_pose_position = [current_object_pose_position.x_val, current_object_pose_position.y_val,
+                                                current_object_pose_position.z_val]
+                current_vehicle_positions_lst.append(current_position_airsim)
+                current_object_positions_lst.append(current_object_pose_position)
             turn_completed = True
 
         # else: ## distance_from_target_point > 0.5:
@@ -160,7 +167,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         # car_state = client.getCarState()
         # curr_vel = car_state.speed
         # print(curr_vel)
-        #desired_steer *= -1
+
         print(f"desired steer :{desired_steer}")
         desired_steer /= follow_handler.max_steering  # Convert range to [-1, 1]
         desired_steer = np.clip(desired_steer, -1, 1)  # maybe we need to play with these values
@@ -175,9 +182,10 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         car_controls.steering = real_steer
         client.setCarControls(car_controls)
 
-    plots_utils.plot_the_car_path(current_position_lst)
-    plots_utils.combine_plot(spline_obj.xi, spline_obj.yi, current_position_lst)
-    return current_position_lst
+    plots_utils.plot_vehicle_relative_path(current_vehicle_positions_lst)
+    plots_utils.plot_vehicle_object_path(current_object_positions_lst)  #this plot will plot an overview all vehicle turnings
+    plots_utils.combine_plot(spline_obj.xi, spline_obj.yi, current_vehicle_positions_lst)
+    return current_vehicle_positions_lst
 
 
     """
