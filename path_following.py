@@ -140,7 +140,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         if distance_from_target_point < 5.0 and \
                 ((-0.25 <= client.getCarControls("Car1").steering <= 0.25) or
                  (88.0<abs(spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0])<=92.0) or   # turn left and right from yaw 0/180
-                 (-2.0<spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0]<=2.0 ) or        # turn left from yaw 90
+                 (-1<spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0]<=1 ) or        # turn left from yaw 90
                 (178.0<abs(spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0])<=182.0 )): # turn right from yaw 90
 
             # let the car drive in straight line and low speed for few seconds
@@ -172,7 +172,8 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
             turn_completed = True
 
         # else: ## distance_from_target_point > 0.5:
-
+        if turn_completed:
+            break
         desired_speed, desired_steer = follow_handler.calc_ref_speed_steering(current_position_global, curr_vel, curr_heading)
         # Close a control loop over the throttle/speed of the vehicle:
         # throttle_command = speed_controller.velocity_control(desired_speed, 0, curr_vel)

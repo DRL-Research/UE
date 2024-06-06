@@ -9,11 +9,11 @@ import math
 
 def airsim_point_to_global(airsim_point, execution_time, curr_vel, transition_matrix):
     airsim_point_copy = airsim_point.copy()
-    global_point, dump = spatial_utils.convert_eng_airsim(airsim_point_copy, [0, 0, 0])
+    centroid_eng, dump = spatial_utils.convert_eng_airsim(airsim_point_copy, [0, 0, 0])
     # centroid_eng[0] -= execution_time * curr_vel * 2.0  # Compensate for sensor sync
     # centroid_lidar = np.append(centroid_eng, 1)
     # global_point = np.matmul(transition_matrix, centroid_lidar)[:3]
-    return global_point
+    return centroid_eng
 
 
 def global_point_to_airsim(global_point, lidar_to_map):
@@ -56,74 +56,74 @@ def get_points_for_bezier_curve(current_car1_settings_position, initial_yaw, exe
         if direction == 'right':
             destination_point_settings_position = [vehicle_pose.position.x_val + 20,
                                                    vehicle_pose.position.y_val + 10,
-                                                   current_car1_settings_position.z_val]
+                                                   vehicle_pose.position.z_val]
             control_point_settings_position = [vehicle_pose.position.x_val + 20,
                                                vehicle_pose.position.y_val,
-                                               current_car1_settings_position.z_val]
+                                               vehicle_pose.position.z_val]
 
         else:  # direction == left
-            destination_point_settings_position = [current_car1_settings_position.x_val + 20,
-                                                   current_car1_settings_position.y_val - 10,
-                                           current_car1_settings_position.z_val]
-            control_point_settings_position = [current_car1_settings_position.x_val + 20,
-                                               current_car1_settings_position.y_val,
-                                               current_car1_settings_position.z_val]
+            destination_point_settings_position = [vehicle_pose.position.x_val + 20,
+                                                   vehicle_pose.position.y_val - 10,
+                                           vehicle_pose.position.z_val]
+            control_point_settings_position = [vehicle_pose.position.x_val + 20,
+                                               vehicle_pose.position.y_val,
+                                               vehicle_pose.position.z_val]
     elif 179 <= abs(initial_yaw) <= 181:  # yaw = 180
         if direction == 'right':
             destination_point_settings_position = [vehicle_pose.position.x_val - 20,
                                                    vehicle_pose.position.y_val - 10,
-                                                   current_car1_settings_position.z_val]
+                                                   vehicle_pose.position.z_val]
             control_point_settings_position = [vehicle_pose.position.x_val - 20,
                                                vehicle_pose.position.y_val,
-                                               current_car1_settings_position.z_val]
+                                               vehicle_pose.position.z_val]
 
         else:  # direction == left
-            destination_point_settings_position = [current_car1_settings_position.x_val - 20,
-                                                   current_car1_settings_position.y_val + 10,
-                                                   current_car1_settings_position.z_val]
-            control_point_settings_position = [current_car1_settings_position.x_val - 20,
-                                               current_car1_settings_position.y_val,
-                                               current_car1_settings_position.z_val]
+            destination_point_settings_position = [vehicle_pose.position.x_val - 20,
+                                                   vehicle_pose.position.y_val + 10,
+                                                   vehicle_pose.position.z_val]
+            control_point_settings_position = [vehicle_pose.position.x_val - 20,
+                                               vehicle_pose.position.y_val,
+                                               vehicle_pose.position.z_val]
     elif 89<= initial_yaw <= 91:  # yaw = 90
         if direction == 'right':
             destination_point_settings_position = [
                 vehicle_pose.position.x_val - 10,  # Switched this line
                 vehicle_pose.position.y_val + 20,  # With this line
-                current_car1_settings_position.z_val]
+                vehicle_pose.position.z_val]
 
             control_point_settings_position = [vehicle_pose.position.x_val,
                                                vehicle_pose.position.y_val+20,
-                                               current_car1_settings_position.z_val]
+                                               vehicle_pose.position.z_val]
 
         else:  # direction == left
             destination_point_settings_position = [
                 vehicle_pose.position.x_val + 10,  # Switched this line
                 vehicle_pose.position.y_val + 20,  # With this line
-                current_car1_settings_position.z_val]
+                vehicle_pose.position.z_val]
 
             control_point_settings_position = [vehicle_pose.position.x_val,
                                                vehicle_pose.position.y_val+20,
-                                               current_car1_settings_position.z_val]
+                                               vehicle_pose.position.z_val]
     else:       # yaw -90 or 270
         if direction == 'right':
             destination_point_settings_position = [
                 vehicle_pose.position.x_val + 10,  # Switched this line
                 vehicle_pose.position.y_val - 15,  # With this line
-                current_car1_settings_position.z_val]
+                vehicle_pose.position.z_val]
 
             control_point_settings_position = [vehicle_pose.position.x_val,
                                                vehicle_pose.position.y_val - 15,
-                                               current_car1_settings_position.z_val]
+                                               vehicle_pose.position.z_val]
 
         else:  # direction == left
             destination_point_settings_position = [
                 vehicle_pose.position.x_val - 10,  # Switched this line
                 vehicle_pose.position.y_val - 20,  # With this line
-                current_car1_settings_position.z_val]
+                vehicle_pose.position.z_val]
 
             control_point_settings_position = [vehicle_pose.position.x_val,
                                                vehicle_pose.position.y_val - 20,
-                                               current_car1_settings_position.z_val]
+                                               vehicle_pose.position.z_val]
 
 
     destination_point_global = airsim_point_to_global(destination_point_settings_position, execution_time, curr_vel, transition_matrix)
@@ -177,9 +177,16 @@ def create_bezier_curve(client, current_car1_settings_position, execution_time, 
         y_start = client.simGetVehiclePose(moving_car_name).position.y_val
         start_point = np.array([x_start,y_start])  # beacause this is the start point ref to car 1
 
+        vehicle_pose = client.simGetVehiclePose(moving_car_name)
+        start_point_airsim = [vehicle_pose.position.x_val,  # Switched this line
+                                vehicle_pose.position.y_val,  # With this line
+                                vehicle_pose.position.z_val]
+        start_point_global = airsim_point_to_global(start_point_airsim, execution_time, curr_vel, transition_matrix)
+        start_point_global_np = np.array([start_point_global[0],start_point_global[1]])
         # start_point = np.array([0.0, 0.0])  # beacause this is the start point ref to car 1
+        ####     destination_point_global = airsim_point_to_global(destination_point_settings_position, execution_time, curr_vel, transition_matrix)
 
-        global_curve_points = bezier.generate_curve_points(start_point, control_point_global,
+        global_curve_points = bezier.generate_curve_points(start_point_global_np, control_point_global,
                                                            destination_point_global)  # todo this is not the same coorainate maybe
         global_curve_points = [[p[0], p[1], 0] for p in global_curve_points]  # global
         # global_curve_points = [[round(p[0], 7), round(p[1], 7), 0] for p in global_curve_points]  # shahar ?????????
