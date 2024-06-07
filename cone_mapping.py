@@ -127,6 +127,14 @@ def mapping_loop(client, setup_manager: SetupManager):
             pointcloud = np.array(lidar_data.point_cloud, dtype=np.dtype('f4'))
             pointcloud = pointcloud.reshape((int(pointcloud.shape[0] / 3), 3))
 
+            # Uncomment this for car detection
+            # car_detection(airsim_client=client,
+            #               points_cloud=pointcloud,
+            #               lidar_to_map=lidar_to_map,
+            #               execution_time=execution_time,
+            #               velocity=curr_vel,
+            #               other_car_name='Car2')
+
             # Save the images in memory
             left_image = camera_utils.get_bgr_image(responses[0])
             right_image = camera_utils.get_bgr_image(responses[1])
