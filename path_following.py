@@ -99,6 +99,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         ###############################################################################################
 
         rot_airsim = spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)       # yaw, pitch, roll
+        current_yaw = rot_airsim[0]
         current_position_airsim = [vehicle_pose.position.x_val, vehicle_pose.position.y_val, vehicle_pose.position.z_val]
         current_position_global = turn_helper.airsim_point_to_global(current_position_airsim,execution_time=execution_time, curr_vel=curr_vel,
                                                                      transition_matrix=transition_matrix)
@@ -113,7 +114,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
 
 
         ##############################################################################
-        curr_heading = np.deg2rad(curr_rot[0])
+        curr_heading = np.deg2rad(curr_rot[0])      # in eng coordinates
         """global positions"""
         print(f"vechicle pose {client.simGetVehiclePose(moving_car_name).position}")
         print(f"position global {current_position_global}")
@@ -125,11 +126,9 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
 
         current_vehicle_positions_lst.append(current_position_airsim)        # used for plotting
         current_object_positions_lst.append(current_object_pose_position)
-        if distance_from_target_point < 5.0 and \
-                ((-0.25 <= client.getCarControls("Car1").steering <= 0.25) or   # todo: maybe no need for steer
-                 (88.0<abs(spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0])<=92.0) or   # turn left and right from yaw 0/180
-                 (-1<spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0]<=1 ) or        # turn left from yaw 90
-                (178.0<abs(spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)[0])<=182.0 )): # turn right from yaw 90
+        if distance_from_target_point < 2.0 and ((-89.0<abs(current_yaw)<=91.0) or   # was or -0.25<steer<0.25
+                 (-1<current_yaw<=1 ) or        # turn left from yaw 90
+                (178.0<abs(current_yaw)<=182.0)): # turn right from yaw 90
 
             # let the car drive in straight line and low speed for few seconds
             car_controls.throttle = 0.2
