@@ -17,12 +17,11 @@ CAR3_INITIAL_POSITION = [60, 0]
 CAR4_INITIAL_POSITION = [30, 20]  # on the right side
 CAR4_SIDE = 'right'
 
-# fix below
+# NOTE - for now we dont use it
 CAR1_DESIRED_POSITION = np.array([10, 0])
 CAR2_DESIRED_POSITION = np.array([10, 0])
 CAR3_DESIRED_POSITION = np.array([10, 0])
 CAR4_DESIRED_POSITION = np.array([10, 0])
-
 
 CAR1_INITIAL_YAW = 0
 CAR2_INITIAL_YAW = 90
