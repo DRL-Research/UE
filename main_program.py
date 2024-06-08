@@ -29,14 +29,7 @@ if __name__ == '__main__':
     car_controls.throttle = 0.0
     airsim_client.setCarControls(car_controls, vehicle_name=moving_car_name)
 
-    x = [sublist[0] for sublist in tracked_points[::2]]
-    y = [sublist[1] for sublist in tracked_points[::2]]
-
-    spline_obj = spline_utils.PathSpline(x, y)
-    spline_obj.generate_spline(amount=0.1, meters=True, smoothing=1, summation=len(x))
-    print('Done!')
-
-    plots_utils.plot_the_spline(spline_obj.xi,-1*spline_obj.yi)
+    spline_obj = turn_helper.filter_tracked_points_and_generate_spline(tracked_points)
 
     # Follow the spline using Stanley's method:
     print('Starting variable speed spline following procedure.')

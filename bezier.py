@@ -14,7 +14,7 @@ def generate_curve_points(p0, p1, p2, num_points=20000):
     curve_points = [[p[0], p[1]] for p in curve_points]
     return curve_points
 
-
+# todo: do we use this ? if not then remove it
 def menger_curvature(prev_p, curr_p, next_p):
     """
     Calculate the Menger curvature at a given point on a curve defined by three consecutive points.
