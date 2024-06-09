@@ -16,7 +16,7 @@ from turn_consts import *
 
 
 # todo: remove arguments we doesnt use and comments
-def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, transition_matrix=None,moving_car_name="Car1"):
+def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, transition_matrix=None, moving_car_name="Car1"):
     data_dest = os.path.join(os.getcwd(), 'recordings')
     os.makedirs(data_dest, exist_ok=True)
     save_data = False
@@ -132,12 +132,12 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
 
         current_vehicle_positions_lst.append(current_position_airsim)        # used for plotting
         current_object_positions_lst.append(current_object_pose_position)
-        # todo: this is a very not clear condition, break is up
-        #  like: (-1<current_yaw<=1 )  => yaw_is_0 = ZERO_YAW_LOW_BOUNDREY <= current_yaw <= ZERO_YAW_HIGH_BOUNDERY
-        yaw_is_0 = ZERO_YAW_LOW_BOUNDREY <= current_yaw <= ZERO_YAW_HIGH_BOUNDERY
-        if distance_from_target_point < 2.0 and ((-89.0<abs(current_yaw)<=91.0) or   # was or -0.25<steer<0.25
-                 yaw_is_0 or        # turn left from yaw 90
-                (178.0<abs(current_yaw)<=182.0)): # turn right from yaw 90
+
+        yaw_is_0 = ZERO_YAW_LOW_BOUNDREY <= current_yaw <= ZERO_YAW_HIGH_BOUNDERY   # parallel to x+
+        yaw_is_180 = ONE_EIGHTY_YAW_LOW_BOUNDREY <= abs(current_yaw) <= ONE_EIGHTY_YAW_HIGH_BOUNDERY    # parallel to x-
+        yaw_is_90 = NINETY_YAW_LOW_BOUNDREY <= abs(current_yaw) <= NINETY_YAW_HIGH_BOUNDERY # parallel to y+ / y-
+        if distance_from_target_point < 2.0 and (   # was or -0.25<steer<0.25
+                yaw_is_90 or yaw_is_0 or yaw_is_180):
 
             # let the car drive in straight line and low speed for few seconds
             car_controls.throttle = 0.2
@@ -146,10 +146,9 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
 
             t = time.perf_counter()
             while True:  ## keep drive staright for 5 seconds after we finished the turn
-                # todo: make the user be able to define 5 or more , what he wants
-                elapsed_time = time.perf_counter() - t
-                if elapsed_time > 5:
-                    print("5 seconds have passed. Exiting the loop.")
+                time_passed = time.perf_counter() - t
+                if time_passed > TIME_TO_KEEP_STRAIGHT_AFTER_TURN:
+                    print(f"{TIME_TO_KEEP_STRAIGHT_AFTER_TURN} seconds have passed. Exiting the loop.")
                     break
 
                 vehicle_pose = client.simGetVehiclePose(moving_car_name)

@@ -1,3 +1,5 @@
+import math
+
 from scipy.spatial.transform import Rotation
 import numpy as np
 
@@ -136,6 +138,22 @@ def tf_matrix_from_airsim_object(actor_pose):
 def get_car_settings_position(client, car_name):
     return client.simGetObjectPose(car_name).position
 
+
+def get_distance_in_3d(position1, position2):
+    """
+    Calculate the Euclidean distance between two 3D points.
+
+    Args:
+        position1: An object with x_val, y_val, and z_val attributes (e.g., airsim.Vector3r)
+        position2: An object with x_val, y_val, and z_val attributes (e.g., airsim.Vector3r)
+
+    Returns:
+        The Euclidean distance between position1 and position2.
+    """
+    distance = math.sqrt((position1.x_val - position2.x_val) ** 2 +
+                         (position1.y_val - position2.y_val) ** 2 +
+                         (position1.z_val - position2.z_val) ** 2)
+    return distance
 
 ##########################################################################################################
 

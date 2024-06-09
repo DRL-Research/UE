@@ -117,7 +117,7 @@ def mapping_loop(client, moving_car_name='Car1'):
             ########################################################################################################################
             current_car1_settings_position = spatial_utils.get_car_settings_position(client,"Car1")
 
-            tracked_points_bezier = turn_helper.create_bezier_curve(client,car1_initial_settings_position, current_car1_settings_position, execution_time, curr_vel,transition_matrix=vehicle_to_map, direction='left',moving_car_name=moving_car_name)
+            tracked_points_bezier = turn_helper.create_bezier_curve(client,car1_initial_settings_position, current_car1_settings_position, execution_time, curr_vel,transition_matrix=vehicle_to_map, direction="left",moving_car_name=moving_car_name)
             if tracked_points_bezier is not None:
                 return tracked_points_bezier, execution_time, curr_vel, vehicle_to_map
             ########################################################################################################################
