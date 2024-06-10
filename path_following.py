@@ -89,9 +89,9 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         current_object_pose_position = client.simGetObjectPose(moving_car_name).position
         current_object_pose_position = [current_object_pose_position.x_val, current_object_pose_position.y_val, current_object_pose_position.z_val]
         # todo: make a function
-        distance_from_target_point = math.sqrt((current_position_global[0] - target_point[0]) ** 2 +
-                                                (current_position_global[1] - target_point[1]) ** 2)
-
+        # distance_from_target_point = math.sqrt((current_position_global[0] - target_point[0]) ** 2 +
+        #                                          (current_position_global[1] - target_point[1]) ** 2)
+        distance_from_target_point = spatial_utils.calculate_distance_in_2d_from_array(current_position_global, target_point)
         if now - start_time_lst >= max_run_time: ## if its miss the distance from the point the car will stop after max_run_time
             plots_utils.plot_vehicle_relative_path(current_vehicle_positions_lst)
             return current_vehicle_positions_lst

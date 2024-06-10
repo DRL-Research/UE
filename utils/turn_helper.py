@@ -134,7 +134,7 @@ def calculate_points_for_yaw_270(vehicle_pose, direction):
 def create_bezier_curve(client, initial_car_position, current_car_position, execution_time, curr_vel, transition_matrix, direction, moving_car_name):
 
     # Calculate the Euclidean distance
-    distance_from_initial_position = spatial_utils.get_distance_in_3d(current_car_position,initial_car_position)
+    distance_from_initial_position = spatial_utils.calculate_distance_in_2d_from_3dvector(current_car_position,initial_car_position)
 
     vehicle_pose = client.simGetVehiclePose(moving_car_name)
     vehicle_rotation = spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation) # return  : yaw, pitch, roll

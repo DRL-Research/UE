@@ -138,21 +138,48 @@ def tf_matrix_from_airsim_object(actor_pose):
 def get_car_settings_position(client, car_name):
     return client.simGetObjectPose(car_name).position
 
-
-def get_distance_in_3d(position1, position2):
+def calculate_distance_in_2d_from_3dvector(position1, position2):
     """
-    Calculate the Euclidean distance between two 3D points.
+    Calculate the Euclidean distance between two points in 2D or 3D space.
 
-    Args:
-        position1: An object with x_val, y_val, and z_val attributes (e.g., airsim.Vector3r)
-        position2: An object with x_val, y_val, and z_val attributes (e.g., airsim.Vector3r)
+    Parameters:
+    position1 (list or 3dVector): The first position. If is_array is True, it should be a list or array of (x, y, z) coordinates.
+    position2 (list or 3dVector): The second position. If is_array is True, it should be a list or array of (x, y, z) coordinates.
+    is_array (bool): If True, position1 and position2 are assumed to be lists or arrays of coordinates. Otherwise, they are objects with x_val, y_val, z_val
 
     Returns:
-        The Euclidean distance between position1 and position2.
+    float: The Euclidean distance between position1 and position2.
     """
     distance = math.sqrt((position1.x_val - position2.x_val) ** 2 +
-                         (position1.y_val - position2.y_val) ** 2 +
-                         (position1.z_val - position2.z_val) ** 2)
+                                           (position1.y_val - position2.y_val) ** 2)
+    # position1 = [position1.x_val, position1.y_val]
+    # position2 = [position2.x_val, position2.y_val]
+    # position1 = np.array(position1)
+    # position2 = np.array(position2)
+    # distance = np.linalg.norm(position1 - position2)
+
+    return distance
+def calculate_distance_in_2d_from_array(position1, position2):
+    """
+    Calculate the Euclidean distance between two points in 2D or 3D space.
+
+    Parameters:
+    position1 (list or 3dVector): The first position. If is_array is True, it should be a list or array of (x, y, z) coordinates.
+    position2 (list or 3dVector): The second position. If is_array is True, it should be a list or array of (x, y, z) coordinates.
+    is_array (bool): If True, position1 and position2 are assumed to be lists or arrays of coordinates. Otherwise, they are objects with x_val, y_val, z_val
+
+    Returns:
+    float: The Euclidean distance between position1 and position2.
+    """
+    # if len(position1) != 2:
+    #     position1 = [position1[0], position1[1]]
+    # if len(position2) != 2:
+    #     position2 = [position2[0], position2[1]]
+    # position1 = np.array(position1)
+    # position2 = np.array(position2)
+    # distance = np.linalg.norm(position1 - position2)
+    distance = math.sqrt((position1[0] - position2[0]) ** 2 +
+                                           (position1[1] - position2[1]) ** 2)
     return distance
 
 ##########################################################################################################
