@@ -15,7 +15,7 @@ import bezier
 import spline_utils
 import path_following
 import turn_helper
-
+from turn_consts import *
 decimation = 30e9  # Used to save an output image every X iterations.
 
 
@@ -97,7 +97,7 @@ def mapping_loop(client, moving_car_name='Car1'):
     idx = 0
     save_idx = 0
     #############################################################################################################
-    car1_initial_settings_position = spatial_utils.get_car_settings_position(client,"Car1")
+    initial_car_position = spatial_utils.get_car_settings_position(client,moving_car_name)
     #############################################################################################################
     while last_iteration - start_time < 300:
         now = time.perf_counter()
@@ -115,10 +115,19 @@ def mapping_loop(client, moving_car_name='Car1'):
             curr_vel = car_state.speed
 
             ########################################################################################################################
-            current_car1_settings_position = spatial_utils.get_car_settings_position(client,"Car1")
+            current_car_position = spatial_utils.get_car_settings_position(client,moving_car_name)
+            # Calculate the Euclidean distance
+            distance_from_initial_position = spatial_utils.calculate_distance_in_2d_from_3dvector(current_car_position,
+                                                                                                  initial_car_position)
 
-            tracked_points_bezier = turn_helper.create_bezier_curve(client,car1_initial_settings_position, current_car1_settings_position, execution_time, curr_vel,transition_matrix=vehicle_to_map, direction="left",moving_car_name=moving_car_name)
-            if tracked_points_bezier is not None:
+
+            vehicle_rotation = spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)  # return  : yaw, pitch, roll
+            initial_yaw = vehicle_rotation[0]  # retrun the yaw
+            # for start, the vehicle is moving straight a few meters
+
+            reached_start_turning_point = DISTANCE_BEFORE_START_TURNING <= distance_from_initial_position  # dont think we need upper bound <= 2.7
+            if reached_start_turning_point:
+                tracked_points_bezier = turn_helper.create_bezier_curve(client,initial_yaw, vehicle_pose,direction="left",moving_car_name=moving_car_name)
                 return tracked_points_bezier, execution_time, curr_vel, vehicle_to_map
             ########################################################################################################################
     """

@@ -131,44 +131,32 @@ def calculate_points_for_yaw_270(vehicle_pose, direction):
     return destination_point, control_point
 
 
-def create_bezier_curve(client, initial_car_position, current_car_position, execution_time, curr_vel, transition_matrix, direction, moving_car_name):
+def create_bezier_curve(client, initial_yaw,vehicle_pose, direction, moving_car_name):
+    destination_point_global, control_point_global = \
+        get_points_for_bezier_curve(client, moving_car_name, initial_yaw, direction)
 
-    # Calculate the Euclidean distance
-    distance_from_initial_position = spatial_utils.calculate_distance_in_2d_from_3dvector(current_car_position,initial_car_position)
+    start_point_airsim = [vehicle_pose.position.x_val,
+                            vehicle_pose.position.y_val,
+                            vehicle_pose.position.z_val]
+    start_point_global = airsim_point_to_global(start_point_airsim)
+    start_point_x_coordinate = start_point_global[0]
+    start_point_y_coordinate = start_point_global[1]
+    start_point_global_np = np.array([start_point_x_coordinate,start_point_y_coordinate]) # needed for creating the bezier
 
-    vehicle_pose = client.simGetVehiclePose(moving_car_name)
-    vehicle_rotation = spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation) # return  : yaw, pitch, roll
-    initial_yaw = vehicle_rotation[0] # retrun the yaw
-    # for start, the vehicle is moving straight a few meters
+    global_curve_points = bezier.generate_curve_points(start_point_global_np, control_point_global,
+                                                       destination_point_global)
+    global_curve_points_with_z_set_to_zero = []
+    # this way is more clear to a user that read this, he doesnt need to debug the code
+    for point_as_tuple in global_curve_points:
+        x = point_as_tuple[0]
+        y = point_as_tuple[1]
+        z = 0  # by definition
+        point = [x, y, z]
+        global_curve_points_with_z_set_to_zero.append(point)
+    global_curve_points = global_curve_points_with_z_set_to_zero
 
-    reached_start_turning_point = DISTANCE_BEFORE_START_TURNING <= distance_from_initial_position   # dont think we need upper bound <= 2.7
-    if reached_start_turning_point:
-        destination_point_global, control_point_global = \
-            get_points_for_bezier_curve(client, moving_car_name, initial_yaw, direction)
+    return global_curve_points
 
-        start_point_airsim = [vehicle_pose.position.x_val,
-                                vehicle_pose.position.y_val,
-                                vehicle_pose.position.z_val]
-        start_point_global = airsim_point_to_global(start_point_airsim)
-        start_point_x_coordinate = start_point_global[0]
-        start_point_y_coordinate = start_point_global[1]
-        start_point_global_np = np.array([start_point_x_coordinate,start_point_y_coordinate]) # needed for creating the bezier
-
-        global_curve_points = bezier.generate_curve_points(start_point_global_np, control_point_global,
-                                                           destination_point_global)
-        global_curve_points_with_z_set_to_zero = []
-        # this way is more clear to a user that read this, he doesnt need to debug the code
-        for point_as_tuple in global_curve_points:
-            x = point_as_tuple[0]
-            y = point_as_tuple[1]
-            z = 0  # by definition
-            point = [x, y, z]
-            global_curve_points_with_z_set_to_zero.append(point)
-        global_curve_points = global_curve_points_with_z_set_to_zero
-
-        return global_curve_points
-    else:
-        return None
 
 def filter_tracked_points_and_generate_spline(tracked_points):
 
