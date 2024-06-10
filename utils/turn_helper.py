@@ -36,7 +36,7 @@ def get_points_for_bezier_curve(client, moving_car_name, initial_yaw, direction)
         destination_point_airsim, control_point_airsim = calculate_points_for_yaw_0(vehicle_pose, direction)
     elif yaw_is_180:
         destination_point_airsim, control_point_airsim = calculate_points_for_yaw_180(vehicle_pose, direction)
-    elif yaw_is_90:  # yaw = 90
+    elif yaw_is_90:
         destination_point_airsim, control_point_airsim = calculate_points_for_yaw_90(vehicle_pose, direction)
     else:       # yaw 270 (-90)
         destination_point_airsim, control_point_airsim = calculate_points_for_yaw_270(vehicle_pose, direction)
@@ -140,8 +140,8 @@ def create_bezier_curve(client, initial_car_position, current_car_position, exec
     vehicle_rotation = spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation) # return  : yaw, pitch, roll
     initial_yaw = vehicle_rotation[0] # retrun the yaw
     # for start, the vehicle is moving straight a few meters
-    # todo: this values are fine but they should be in a variable  - > variable or parameter?
-    reached_start_turning_point = 2.5 <= distance_from_initial_position <= 2.7
+
+    reached_start_turning_point = DISTANCE_BEFORE_START_TURNING <= distance_from_initial_position   # dont think we need upper bound <= 2.7
     if reached_start_turning_point:
         destination_point_global, control_point_global = \
             get_points_for_bezier_curve(client, moving_car_name, initial_yaw, direction)

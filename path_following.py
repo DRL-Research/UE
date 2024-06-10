@@ -13,7 +13,7 @@ import struct
 import csv
 import os
 from turn_consts import *
-
+from follow_handler_consts import *
 
 # todo: remove arguments we doesnt use and comments
 def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, transition_matrix=None, moving_car_name="Car1"):
@@ -21,41 +21,19 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
     os.makedirs(data_dest, exist_ok=True)
     save_data = False
 
-    # In case the file is run as standalone, no mapping procedure was made.
-    # Hence, we need to build the spline path out of known cone locations.
-    if spline_obj is None:
-        # Airsim always spawns at zero. Must compensate using "playerstart" location in unreal:
-        # todo: i know we didnt touch this code but it make our code rusty, lets move it to a method
-        #  like "generate default spline object"
-        starting_x = 12.1
-        starting_y = 18.7
-        spline_origin_x = 12
-        spline_origin_y = 25
-        x_offset = spline_origin_x - starting_x
-        y_offset = spline_origin_y - starting_y
 
-        # Define spline
-        x = np.array(
-            [-2.00, 0.00, 0.00, 0.00, -5.00, -13.0, -21.0, -27.0, -32.0, -38.0, -47.0, -55.0, -53.0, -40.0, -25.0,
-             -23.0, -37.0, -34.0, -20.0, -8.0])
-        y = np.array(
-            [6.0, -7.0, -19.0, -34.0, -46.0, -51.0, -54.0, -59.0, -68.0, -74.0, -75.0, -68.0, -54.0, -39.0, -23.0,
-             -8.00, 6.00, 21.00, 23.00, 15.00])
-        x += x_offset
-        y += y_offset
-        y *= -1
-        spline_obj = PathSpline(x, y)
-        spline_obj.generate_spline(0.1, smoothing=1)
-        spatial_utils.set_airsim_pose(client, [0.0, 0.0], [90.0, 0, 0])
+    if spline_obj is None:
+        # our spline_obj is not None. thats a previous code section
+        spline_obj = create_spline_object_manually(client)
+
 
     # Define Stanley-method parameters:
-    # todo: take all this values like 8.0 and so on, to vars
     follow_handler = path_control.StanleyFollower(spline_obj)
-    follow_handler.k_vel *= 2.0  # Arbitrary
-    follow_handler.max_velocity = 8.0  # m/s
-    follow_handler.min_velocity = 3.0  # m/s
-    follow_handler.lookahead = 5.0  # meters
-    follow_handler.k_steer = 10.0  # Stanley steering coefficient  # shahar changes 2 to be 10
+    follow_handler.k_vel *= K_VEL
+    follow_handler.max_velocity = MAX_VELOCITY  # m/s
+    follow_handler.min_velocity = MIN_VELOCITY  # m/s
+    follow_handler.lookahead = LOOKAHEAD  # meters
+    follow_handler.k_steer = K_STEER  # Stanley steering coefficient
 
     # Open access to shared memory blocks:
     shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
@@ -163,10 +141,13 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
                 current_object_positions_lst.append(current_object_pose_position)
             turn_completed = True
 
-        # else: ## distance_from_target_point > 0.5:
+
         if turn_completed:
             break
+        ## turn not completed:
         desired_speed, desired_steer = follow_handler.calc_ref_speed_steering(current_position_global, curr_vel, curr_heading)
+
+
         # Close a control loop over the throttle/speed of the vehicle:
         # throttle_command = speed_controller.velocity_control(desired_speed, 0, curr_vel)
         # throttle_command = np.clip(throttle_command, 0.0, 0.4)
@@ -220,7 +201,37 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
     return pickling_objects, car_data
     """
 
+def create_spline_object_manually(client):
+    """
+    this function is used for object spline of knows location of cones.
+    we dont use it this because our object is not None.
+    :param client:
+    :return:
+    """
+    # In case the file is run as standalone, no mapping procedure was made.
+    # Hence, we need to build the spline path out of known cone locations.
+    # Airsim always spawns at zero. Must compensate using "playerstart" location in unreal:
+    starting_x = 12.1
+    starting_y = 18.7
+    spline_origin_x = 12
+    spline_origin_y = 25
+    x_offset = spline_origin_x - starting_x
+    y_offset = spline_origin_y - starting_y
 
+    # Define spline
+    x = np.array(
+        [-2.00, 0.00, 0.00, 0.00, -5.00, -13.0, -21.0, -27.0, -32.0, -38.0, -47.0, -55.0, -53.0, -40.0, -25.0,
+         -23.0, -37.0, -34.0, -20.0, -8.0])
+    y = np.array(
+        [6.0, -7.0, -19.0, -34.0, -46.0, -51.0, -54.0, -59.0, -68.0, -74.0, -75.0, -68.0, -54.0, -39.0, -23.0,
+         -8.00, 6.00, 21.00, 23.00, 15.00])
+    x += x_offset
+    y += y_offset
+    y *= -1
+    spline_obj = PathSpline(x, y)
+    spline_obj.generate_spline(0.1, smoothing=1)
+    spatial_utils.set_airsim_pose(client, [0.0, 0.0], [90.0, 0, 0])
+    return spline_obj
 
 if __name__ == '__main__':
     # Create an Airsim client:
