@@ -16,6 +16,7 @@ import spline_utils
 import path_following
 import turn_helper
 from turn_consts import *
+
 decimation = 30e9  # Used to save an output image every X iterations.
 
 
@@ -44,9 +45,7 @@ def process_camera(lidar_to_cam, vector, camera, image, tracked_cone, idx, copy_
     return cone_color
 
 
-
 def mapping_loop(client, moving_car_name='Car1'):
-
     global decimation
     image_dest = os.path.join(os.getcwd(), 'images')
     data_dest = os.path.join(os.getcwd(), 'recordings')
@@ -76,7 +75,7 @@ def mapping_loop(client, moving_car_name='Car1'):
     shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
 
     # Initialize vehicle starting point
-    #spatial_utils.set_airsim_pose(client, [0.0, 0.0], [180.0, 0, 0])
+    # spatial_utils.set_airsim_pose(client, [0.0, 0.0], [180.0, 0, 0])
     time.sleep(1.0)
     car_controls = airsim.CarControls()
     car_controls.throttle = 0.2
@@ -96,38 +95,31 @@ def mapping_loop(client, moving_car_name='Car1'):
     tracked_points_bezier = []
     idx = 0
     save_idx = 0
-    #############################################################################################################
-    initial_car_position = spatial_utils.get_car_settings_position(client,moving_car_name)
-    #############################################################################################################
+    initial_car_position = spatial_utils.get_car_settings_position(client, moving_car_name)
     while last_iteration - start_time < 300:
         now = time.perf_counter()
         delta_time = now - last_iteration
-
         if delta_time > sample_time:
             last_iteration = time.perf_counter()
             vehicle_pose = client.simGetVehiclePose(moving_car_name)
-
-
             vehicle_to_map = spatial_utils.tf_matrix_from_airsim_object(vehicle_pose)
             map_to_vehicle = np.linalg.inv(vehicle_to_map)
             lidar_to_map = np.matmul(vehicle_to_map, lidar_to_vehicle)
             car_state = client.getCarState()
             curr_vel = car_state.speed
-
-            ########################################################################################################################
-            current_car_position = spatial_utils.get_car_settings_position(client,moving_car_name)
+            current_car_position = spatial_utils.get_car_settings_position(client, moving_car_name)
             # Calculate the Euclidean distance
             distance_from_initial_position = spatial_utils.calculate_distance_in_2d_from_3dvector(current_car_position,
                                                                                                   initial_car_position)
-
-
-            vehicle_rotation = spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)  # return  : yaw, pitch, roll
+            vehicle_rotation = spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)  # return yaw,pitch,roll
             initial_yaw = vehicle_rotation[0]  # retrun the yaw
             # for start, the vehicle is moving straight a few meters
 
             reached_start_turning_point = DISTANCE_BEFORE_START_TURNING <= distance_from_initial_position  # dont think we need upper bound <= 2.7
             if reached_start_turning_point:
-                tracked_points_bezier = turn_helper.create_bezier_curve(client,initial_yaw, vehicle_pose,direction="left",moving_car_name=moving_car_name)
+                tracked_points_bezier = turn_helper.create_bezier_curve(client, initial_yaw, vehicle_pose,
+                                                                        direction="left",
+                                                                        moving_car_name=moving_car_name)
                 return tracked_points_bezier, execution_time, curr_vel, vehicle_to_map
             ########################################################################################################################
     """
@@ -234,7 +226,6 @@ def mapping_loop(client, moving_car_name='Car1'):
     """
 
 
-
 if __name__ == '__main__':
     airsim_client = airsim.CarClient()
     airsim_client.confirmConnection()
@@ -249,4 +240,3 @@ if __name__ == '__main__':
     vehicle_controls.throttle = 0.0
     vehicle_controls.brake = 1.0
     airsim_client.setCarControls(vehicle_controls)
-

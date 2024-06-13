@@ -15,17 +15,15 @@ import os
 from turn_consts import *
 from follow_handler_consts import *
 
-# todo: remove arguments we doesnt use and comments
+
 def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, transition_matrix=None, moving_car_name="Car1"):
     data_dest = os.path.join(os.getcwd(), 'recordings')
     os.makedirs(data_dest, exist_ok=True)
     save_data = False
 
-
     if spline_obj is None:
         # our spline_obj is not None. thats a previous code section
         spline_obj = create_spline_object_manually(client)
-
 
     # Define Stanley-method parameters:
     follow_handler = path_control.StanleyFollower(spline_obj)
@@ -51,56 +49,37 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
 
     car_controls = airsim.CarControls(moving_car_name)
     car_data = np.ndarray(shape=(0, 8))
-
     start_time = time.perf_counter()
     last_iteration = start_time
     sample_time = 0.01
-
-    ###################################################################################
-
     current_vehicle_positions_lst = []
     current_object_positions_lst = []
     start_time_lst = time.perf_counter()
     max_run_time = 60
     turn_completed = False
+    target_point = [spline_obj.xi[-1], spline_obj.yi[-1]]
 
-    ###################################################################################
-
-    target_point = [spline_obj.xi[-1] , spline_obj.yi[-1]]
-    # todo: if we dont use this so remove it
-    first_position = [client.simGetVehiclePose().position.x_val , client.simGetVehiclePose().position.y_val ]
-    initial_yaw = spatial_utils.extract_rotation_from_airsim(
-        client.simGetVehiclePose(moving_car_name).orientation)[0]
     while not turn_completed:
         now = time.perf_counter()
-
         vehicle_pose = client.simGetVehiclePose(moving_car_name)
-        # todo: if we dont use it, remove it
-        vehicle_to_map = spatial_utils.tf_matrix_from_airsim_object(vehicle_pose)
         car_state = client.getCarState()
         curr_vel = car_state.speed
         curr_pos, curr_rot = spatial_utils.extract_pose_from_airsim(vehicle_pose)
-        ###############################################################################################
-
-        rot_airsim = spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)       # yaw, pitch, roll
+        rot_airsim = spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)    # yaw, pitch, roll
         current_yaw = rot_airsim[0]
         current_position_airsim = [vehicle_pose.position.x_val, vehicle_pose.position.y_val, vehicle_pose.position.z_val]
         current_position_global = turn_helper.airsim_point_to_global(current_position_airsim)
         current_object_pose_position = client.simGetObjectPose(moving_car_name).position
         current_object_pose_position = [current_object_pose_position.x_val, current_object_pose_position.y_val, current_object_pose_position.z_val]
-        # todo: make a function
-        # distance_from_target_point = math.sqrt((current_position_global[0] - target_point[0]) ** 2 +
-        #                                          (current_position_global[1] - target_point[1]) ** 2)
         distance_from_target_point = spatial_utils.calculate_distance_in_2d_from_array(current_position_global, target_point)
+
         if now - start_time_lst >= max_run_time: ## if its miss the distance from the point the car will stop after max_run_time
             plots_utils.plot_vehicle_relative_path(current_vehicle_positions_lst)
             return current_vehicle_positions_lst
 
-
-        ##############################################################################
         curr_heading = np.deg2rad(curr_rot[0])      # in eng coordinates
         """global positions"""
-        print(f"vechicle pose {client.simGetVehiclePose(moving_car_name).position}")
+        print(f"vehicle pose {client.simGetVehiclePose(moving_car_name).position}")
         print(f"position global {current_position_global}")
         print(f"position airsim {current_position_airsim}")
         print(f"object pose: {client.simGetObjectPose('Car1').position}")
@@ -114,9 +93,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         yaw_is_0 = ZERO_YAW_LOW_BOUNDREY <= current_yaw <= ZERO_YAW_HIGH_BOUNDERY   # parallel to x+
         yaw_is_180 = ONE_EIGHTY_YAW_LOW_BOUNDREY <= abs(current_yaw) <= ONE_EIGHTY_YAW_HIGH_BOUNDERY    # parallel to x-
         yaw_is_90 = NINETY_YAW_LOW_BOUNDREY <= abs(current_yaw) <= NINETY_YAW_HIGH_BOUNDERY # parallel to y+ / y-
-        if distance_from_target_point < 2.0 and (   # was or -0.25<steer<0.25
-                yaw_is_90 or yaw_is_0 or yaw_is_180):
-
+        if distance_from_target_point < 2.0 and (yaw_is_90 or yaw_is_0 or yaw_is_180):
             # let the car drive in straight line and low speed for few seconds
             car_controls.throttle = 0.2
             car_controls.steering = 0.0
@@ -141,12 +118,10 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
                 current_object_positions_lst.append(current_object_pose_position)
             turn_completed = True
 
-
         if turn_completed:
             break
-        ## turn not completed:
+        # turn not completed:
         desired_speed, desired_steer = follow_handler.calc_ref_speed_steering(current_position_global, curr_vel, curr_heading)
-
 
         # Close a control loop over the throttle/speed of the vehicle:
         # throttle_command = speed_controller.velocity_control(desired_speed, 0, curr_vel)

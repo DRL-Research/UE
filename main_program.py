@@ -6,7 +6,7 @@ import plots_utils
 import spline_utils
 import path_control
 import time
-
+import turn_mapping
 import turn_helper
 
 if __name__ == '__main__':
@@ -19,7 +19,7 @@ if __name__ == '__main__':
     # Detect the cones and spline points, and return their location:
     print('Starting on-the-fly cone mapping with constant speed and steering procedure.')
     #mapping_data, pursuit_points = cone_mapping.mapping_loop(airsim_client)
-    tracked_points,execution_time,curr_vel,transition_matrix = cone_mapping.mapping_loop(airsim_client, moving_car_name)
+    tracked_points, execution_time, curr_vel, transition_matrix = turn_mapping.mapping_loop(airsim_client, moving_car_name)
 
     print('Mapping complete!')
 
