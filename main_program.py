@@ -44,7 +44,8 @@ if __name__ == '__main__':
 
     # Follow the spline using Stanley's method:
     print('Starting variable speed spline following procedure.')
-    positions_lst = path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel, transition_matrix,moving_car_name=moving_car_name)
+    positions_lst = path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel,
+                                                  transition_matrix, moving_car_name=moving_car_name)
     # plots_utils.combine_plot(spline_obj.xi,spline_obj.yi,positions_lst)
 
     print('Full process complete! stopping vehicle.')

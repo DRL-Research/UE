@@ -28,9 +28,7 @@ class AirsimManager:
         self.reset_cars_to_initial_positions()
 
     def reset_cars_to_initial_positions(self):
-
         self.airsim_client.reset()
-
         # pick at random (car 2 goes from left/right)
         left_or_right = [-1, 1]  # random.choice([1, -1])
 
@@ -73,7 +71,7 @@ class AirsimManager:
 
         for car_name, car_obj in self.setup_manager.cars.items():
             if car_obj.is_active:
-                self.setup_manager.set_car_throttle_by_name(car_name)  # default throttle is 1
+                self.setup_manager.set_car_throttle_by_name(car_name)
 
     def collision_occurred(self):
         collision_info = self.airsim_client.simGetCollisionInfo()
