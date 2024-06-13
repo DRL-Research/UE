@@ -10,18 +10,18 @@ WEIGHTS_TO_SAVE_NAME = "epochs_0_100"
 GLOBAL_EXPERIMENT = False
 
 # Car start positions and orientations
-CAR1_INITIAL_POSITION = [0, 0]
-CAR2_INITIAL_POSITION = [30, 20]  # on the left side
+CAR1_INITIAL_POSITION = [0, 0, 0]
+CAR2_INITIAL_POSITION = [30, 20, 0]  # on the left side
 CAR2_SIDE = 'left'
-CAR3_INITIAL_POSITION = [60, 0]
-CAR4_INITIAL_POSITION = [30, 20]  # on the right side
+CAR3_INITIAL_POSITION = [60, 0, 0]
+CAR4_INITIAL_POSITION = [30, 20, 0]  # on the right side
 CAR4_SIDE = 'right'
 
 # NOTE - for now we dont use it
-CAR1_DESIRED_POSITION = np.array([10, 0])
-CAR2_DESIRED_POSITION = np.array([10, 0])
-CAR3_DESIRED_POSITION = np.array([10, 0])
-CAR4_DESIRED_POSITION = np.array([10, 0])
+CAR1_DESIRED_POSITION = np.array([10, 0, 0])
+CAR2_DESIRED_POSITION = np.array([10, 0, 0])
+CAR3_DESIRED_POSITION = np.array([10, 0, 0])
+CAR4_DESIRED_POSITION = np.array([10, 0, 0])
 
 CAR1_INITIAL_YAW = 0
 CAR2_INITIAL_YAW = 90

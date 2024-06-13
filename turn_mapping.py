@@ -52,7 +52,10 @@ def mapping_loop(client, moving_car_name='Car1', setup_manager: SetupManager = N
     shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
 
     for car_object in setup_manager.cars.values():
-        spatial_utils.set_airsim_pose(client, car_object.name, car_object.initial_position, [90.0, 0, 0])
+        spatial_utils.set_airsim_pose(client,
+                                      moving_car_name=car_object.name,
+                                      desired_position=car_object.initial_position,
+                                      desired_rot=[90.0, 0, 0])
 
     # Initialize vehicle starting point
     # spatial_utils.set_airsim_pose(client, [0.0, 0.0], [180.0, 0, 0])

@@ -21,16 +21,16 @@ if __name__ == '__main__':
 
     steering_procedure_manager = path_control.SteeringProcManager()
     moving_car_name = "Car1"
-    airsim_client = airsim.CarClient()
     airsim_client.confirmConnection()
-    airsim_client.enableApiControl(True, vehicle_name=moving_car_name)
 
     airsim_manager = AirsimManager(airsim_client, setup_manager)
 
     # Detect the cones and spline points, and return their location:
     print('Starting on-the-fly cone mapping with constant speed and steering procedure.')
     #mapping_data, pursuit_points = cone_mapping.mapping_loop(airsim_client)
-    tracked_points, execution_time, curr_vel, transition_matrix = turn_mapping.mapping_loop(airsim_client, moving_car_name)
+    tracked_points, execution_time, curr_vel, transition_matrix = turn_mapping.mapping_loop(airsim_client,
+                                                                                            moving_car_name,
+                                                                                            setup_manager)
 
     print('Mapping complete!')
 
@@ -52,8 +52,6 @@ if __name__ == '__main__':
     car_controls.brake = 1.0
     airsim_client.setCarControls(car_controls, vehicle_name=moving_car_name)
     steering_procedure_manager.terminate_steering_procedure()
-
-
 
 
     # # Record the start time

@@ -5,6 +5,7 @@ from typing import NamedTuple, Dict
 import airsim
 from config import *
 
+
 class JsonKeys(Enum):
     NUMBER_OF_ACTIVE_CARS = "Number-Of-Active-Cars"
 
@@ -40,11 +41,11 @@ class SetupManager:
         is_active_per_car = active + inactive
         car1 = Car(name=CAR1_NAME, speed=0.0, yaw=CAR1_INITIAL_YAW, initial_position=CAR1_INITIAL_POSITION,
                    destination=CAR1_DESIRED_POSITION, is_active=is_active_per_car[0])
-        car2 = Car(name=CAR2_NAME, speed=0.0, yaw=CAR1_INITIAL_YAW, initial_position=CAR1_INITIAL_POSITION,
+        car2 = Car(name=CAR2_NAME, speed=0.0, yaw=CAR2_INITIAL_YAW, initial_position=CAR2_INITIAL_POSITION,
                    destination=CAR2_DESIRED_POSITION, is_active=is_active_per_car[1])
-        car3 = Car(name=CAR3_NAME, speed=0.0, yaw=CAR1_INITIAL_YAW, initial_position=CAR1_INITIAL_POSITION,
+        car3 = Car(name=CAR3_NAME, speed=0.0, yaw=CAR3_INITIAL_YAW, initial_position=CAR3_INITIAL_POSITION,
                    destination=CAR3_DESIRED_POSITION, is_active=is_active_per_car[2])
-        car4 = Car(name=CAR4_NAME, speed=0.0, yaw=CAR1_INITIAL_YAW, initial_position=CAR1_INITIAL_POSITION,
+        car4 = Car(name=CAR4_NAME, speed=0.0, yaw=CAR4_INITIAL_YAW, initial_position=CAR4_INITIAL_POSITION,
                    destination=CAR4_DESIRED_POSITION, is_active=is_active_per_car[3])
         cars = [car1, car2, car3, car4]
         for car in cars:
@@ -54,7 +55,7 @@ class SetupManager:
         for car_id, car_object in self.cars.items():
             self.airsim_client.enableApiControl(is_enabled=True, vehicle_name=car_object.name)
 
-    def set_car_throttle_by_name(self, car_name, throttle=1):
+    def set_car_throttle_by_name(self, car_name, throttle=0.5):
         car_controls = airsim.CarControls()
         car_controls.throttle = throttle
         self.airsim_client.setCarControls(car_controls, car_name)

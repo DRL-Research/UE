@@ -75,7 +75,10 @@ def mapping_loop(client, setup_manager: SetupManager):
     # before:  spatial_utils.set_airsim_pose(client, [0.0, 0.0], [90.0, 0, 0])
     # after:
     for car_object in setup_manager.cars.values():
-        spatial_utils.set_airsim_pose(client, car_object.name, car_object.initial_position, [90.0, 0, 0])
+        spatial_utils.set_airsim_pose(client,
+                                      moving_car_name=car_object.name,
+                                      desired_position=car_object.initial_position,
+                                      desired_rot=[90.0, 0, 0])
 
     time.sleep(1.0)
 
