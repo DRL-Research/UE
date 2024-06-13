@@ -55,7 +55,7 @@ class SetupManager:
         for car_id, car_object in self.cars.items():
             self.airsim_client.enableApiControl(is_enabled=True, vehicle_name=car_object.name)
 
-    def set_car_throttle_by_name(self, car_name, throttle=0.5):
+    def set_car_throttle_by_name(self, car_name, throttle=0.4):
         car_controls = airsim.CarControls()
         car_controls.throttle = throttle
         self.airsim_client.setCarControls(car_controls, car_name)

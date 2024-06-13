@@ -100,7 +100,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
             client.setCarControls(car_controls)
 
             t = time.perf_counter()
-            while True:  ## keep drive staright for 5 seconds after we finished the turn
+            while True:  # keep drive staright for 5 seconds after we finished the turn
                 time_passed = time.perf_counter() - t
                 if time_passed > TIME_TO_KEEP_STRAIGHT_AFTER_TURN:
                     print(f"{TIME_TO_KEEP_STRAIGHT_AFTER_TURN} seconds have passed. Exiting the loop.")
