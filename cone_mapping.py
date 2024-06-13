@@ -11,11 +11,8 @@ import path_control
 import os
 import cv2
 import struct
-import bezier
-import spline_utils
-import path_following
-import turn_helper
-from turn_consts import *
+from car_mapping import *
+from setup_simulation import *
 
 decimation = 30e9  # Used to save an output image every X iterations.
 
@@ -45,7 +42,7 @@ def process_camera(lidar_to_cam, vector, camera, image, tracked_cone, idx, copy_
     return cone_color
 
 
-def mapping_loop(client, moving_car_name='Car1'):
+def mapping_loop(client, setup_manager: SetupManager):
     global decimation
     image_dest = os.path.join(os.getcwd(), 'images')
     data_dest = os.path.join(os.getcwd(), 'recordings')
@@ -75,11 +72,17 @@ def mapping_loop(client, moving_car_name='Car1'):
     shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
 
     # Initialize vehicle starting point
-    # spatial_utils.set_airsim_pose(client, [0.0, 0.0], [180.0, 0, 0])
+    # before:  spatial_utils.set_airsim_pose(client, [0.0, 0.0], [90.0, 0, 0])
+    # after:
+    for car_object in setup_manager.cars.values():
+        spatial_utils.set_airsim_pose(client, car_object.name, car_object.initial_position, [90.0, 0, 0])
+
     time.sleep(1.0)
-    car_controls = airsim.CarControls()
-    car_controls.throttle = 0.2
-    client.setCarControls(car_controls, vehicle_name=moving_car_name)
+
+    for car_object in setup_manager.cars.values():
+        car_controls = airsim.CarControls()
+        car_controls.throttle = car_object.speed # was just 0.2
+        client.setCarControls(vehicle_name=car_object.name, controls=car_controls)
 
     # Initialize loop variables
     tracked_cones = []
@@ -92,138 +95,128 @@ def mapping_loop(client, moving_car_name='Car1'):
     last_iteration = start_time
     sample_time = 0.1
     execution_time = 0.0
-    tracked_points_bezier = []
+
     idx = 0
     save_idx = 0
-    initial_car_position = spatial_utils.get_car_settings_position(client, moving_car_name)
     while last_iteration - start_time < 300:
         now = time.perf_counter()
         delta_time = now - last_iteration
+
         if delta_time > sample_time:
             last_iteration = time.perf_counter()
-            vehicle_pose = client.simGetVehiclePose(moving_car_name)
+            vehicle_pose = client.simGetVehiclePose()
             vehicle_to_map = spatial_utils.tf_matrix_from_airsim_object(vehicle_pose)
             map_to_vehicle = np.linalg.inv(vehicle_to_map)
             lidar_to_map = np.matmul(vehicle_to_map, lidar_to_vehicle)
             car_state = client.getCarState()
             curr_vel = car_state.speed
-            current_car_position = spatial_utils.get_car_settings_position(client, moving_car_name)
-            # Calculate the Euclidean distance
-            distance_from_initial_position = spatial_utils.calculate_distance_in_2d_from_3dvector(current_car_position,
-                                                                                                  initial_car_position)
-            vehicle_rotation = spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)  # return yaw,pitch,roll
-            initial_yaw = vehicle_rotation[0]  # retrun the yaw
-            # for start, the vehicle is moving straight a few meters
 
-            reached_start_turning_point = DISTANCE_BEFORE_START_TURNING <= distance_from_initial_position  # dont think we need upper bound <= 2.7
-            if reached_start_turning_point:
-                tracked_points_bezier = turn_helper.create_bezier_curve(client, initial_yaw, vehicle_pose,
-                                                                        direction="left",
-                                                                        moving_car_name=moving_car_name)
-                return tracked_points_bezier, execution_time, curr_vel, vehicle_to_map
-            ########################################################################################################################
-    """
-    ### this section not used by us
-    #         distance_from_start = np.linalg.norm(vehicle_to_map[0:2, 3])
-    #         if not loop_trigger:
-    #             if distance_from_start > leaving_distance:
-    #                 loop_trigger = True
-    #         else:
-    #             if distance_from_start < entering_distance:
-    #                 break
-    # 
-    #         # To minimize discrepancy between data sources, all acquisitions must be made before processing:
-    #         responses = client.simGetImages([airsim.ImageRequest("LeftCam", 0, False, False),
-    #                                          airsim.ImageRequest("RightCam", 0, False, False)])
-    # 
-    #         lidar_data = client.getLidarData()
-    #         pointcloud = np.array(lidar_data.point_cloud, dtype=np.dtype('f4'))
-    #         pointcloud = pointcloud.reshape((int(pointcloud.shape[0] / 3), 3))
-    # 
-    #         # Save the images in memory
-    #         left_image = camera_utils.get_bgr_image(responses[0])
-    #         right_image = camera_utils.get_bgr_image(responses[1])
-    # 
-    #         left_copy = np.copy(left_image)
-    #         right_copy = np.copy(right_image)
-    # 
-    #         # DBSCAN filtering is done on the sensor-frame
-    #         filtered_pc = dbscan_utils.filter_cloud(pointcloud, 3.0, 8.0, -0.5, 1.0)
-    # 
-    #         # Only if SOME clusters were found:
-    #         if filtered_pc.size > 0:
-    #             # Cluster centroids, filter them by extent and then sort them by ascending distance:
-    #             db = DBSCAN(eps=0.3, min_samples=3).fit(filtered_pc)
-    #             curr_segments, curr_centroids, curr_labels = dbscan_utils.collate_segmentation(db, 1.0)
-    #             curr_centroids.sort(key=lambda x: np.linalg.norm(x))
-    # 
-    #             # Go through the DBSCAN centroids of the current frame:
-    #             for centroid_airsim in curr_centroids:
-    #                 centroid_eng, dump = spatial_utils.convert_eng_airsim(centroid_airsim, [0, 0, 0])
-    #                 centroid_eng[0] -= execution_time * curr_vel * 2.0  # Compensate for sensor sync
-    #                 centroid_lidar = np.append(centroid_eng, 1)
-    #                 centroid_global = np.matmul(lidar_to_map, centroid_lidar)[:3]
-    #                 # We must track yellow and blue cones within the common (global) frame of reference.
-    # 
-    #                 centroid_exists = False
-    #                 # Compare them against all the known tracked objects:
-    #                 for curr_cone in tracked_cones:
-    #                     if curr_cone.check_proximity(centroid_global):
-    #                         centroid_exists = True
-    #                         curr_cone.process_detection(centroid_global)
-    #                         if curr_cone.active:
-    #                             # Estimate color only for active cones, within camera frustum.
-    #                             # Color estimation is done in the camera frame of reference.
-    #                             centroid_vehicle = np.matmul(lidar_to_vehicle, centroid_lidar)[:3]
-    #                             if centroid_vehicle[1] > 0:  # Positive y means left side.
-    #                                 cone_color = process_camera(lidar_to_left_cam,
-    #                                                             centroid_lidar,
-    #                                                             left_cam,
-    #                                                             left_image,
-    #                                                             curr_cone, idx, left_copy)
-    #                             else:
-    #                                 cone_color = process_camera(lidar_to_right_cam,
-    #                                                             centroid_lidar,
-    #                                                             right_cam,
-    #                                                             right_image,
-    #                                                             curr_cone, idx, right_copy)
-    #                         break
-    #                 # If no centroid is close enough to an existing one, create a new tracker instance:
-    #                 if not centroid_exists:
-    #                     new_centroid = tracker_utils.ConeTracker(centroid_global)
-    #                     tracked_cones.append(new_centroid)
-    # 
-    #         desired_steer = pursuit_follower.calc_ref_steering(tracked_cones, map_to_vehicle)
-    #         desired_steer /= pursuit_follower.max_steering  # Convert range to [-1, 1]
-    #         desired_steer = np.clip(desired_steer, -0.2, 0.2)  # Saturate
-    # 
-    #         shmem_setpoint.buf[:8] = struct.pack('d', desired_steer)
-    #         real_steer = struct.unpack('d', shmem_output.buf[:8])[0]
-    # 
-    #         car_controls.steering = desired_steer
-    #         client.setCarControls(car_controls)
-    #         execution_time = time.perf_counter() - last_iteration
-    #         # print(execution_time)
-    # 
-    #         if idx > decimation:
-    #             cv2.imwrite(os.path.join(image_dest, 'left_' + str(save_idx) + '.png'), left_copy)
-    #             cv2.imwrite(os.path.join(image_dest, 'right_' + str(save_idx) + '.png'), right_copy)
-    #             save_idx += 1
-    #             idx = 0
-    # 
-    #         idx += 1
-    #     else:
-    #         time.sleep(0.001)
-    # 
-    # if save_data:
-    #     tracked_objects = {'cones': tracked_cones, 'pursuit': pursuit_follower.pursuit_points}
-    #     with open(os.path.join(data_dest, 'mapping_session.pickle'), 'wb') as pickle_file:
-    #         pickle.dump(tracked_objects, pickle_file)
-    #     print('pickle saved')
-    # 
-    # tracked_cones = tracked_points_bezier
-    # return tracked_cones #, pursuit_follower.pursuit_points
-    """
+            distance_from_start = np.linalg.norm(vehicle_to_map[0:2, 3])
+            if not loop_trigger:
+                if distance_from_start > leaving_distance:
+                    loop_trigger = True
+            else:
+                if distance_from_start < entering_distance:
+                    break
+
+            # To minimize discrepancy between data sources, all acquisitions must be made before processing:
+            responses = client.simGetImages([airsim.ImageRequest("LeftCam", 0, False, False),
+                                             airsim.ImageRequest("RightCam", 0, False, False)])
+
+            lidar_data = client.getLidarData()
+            pointcloud = np.array(lidar_data.point_cloud, dtype=np.dtype('f4'))
+            pointcloud = pointcloud.reshape((int(pointcloud.shape[0] / 3), 3))
+
+            # Uncomment this for car detection
+            # car_detection(airsim_client=client,
+            #               points_cloud=pointcloud,
+            #               lidar_to_map=lidar_to_map,
+            #               execution_time=execution_time,
+            #               velocity=curr_vel,
+            #               other_car_name='Car2')
+
+            # Save the images in memory
+            left_image = camera_utils.get_bgr_image(responses[0])
+            right_image = camera_utils.get_bgr_image(responses[1])
+
+            left_copy = np.copy(left_image)
+            right_copy = np.copy(right_image)
+
+            # DBSCAN filtering is done on the sensor-frame
+            filtered_pc = dbscan_utils.filter_cloud(pointcloud, 3.0, 8.0, -0.5, 1.0)
+
+            # Only if SOME clusters were found:
+            if filtered_pc.size > 0:
+                # Cluster centroids, filter them by extent and then sort them by ascending distance:
+                db = DBSCAN(eps=0.3, min_samples=3).fit(filtered_pc)
+                curr_segments, curr_centroids, curr_labels = dbscan_utils.collate_segmentation(db, 1.0)
+                curr_centroids.sort(key=lambda x: np.linalg.norm(x))
+
+                # Go through the DBSCAN centroids of the current frame:
+                for centroid_airsim in curr_centroids:
+                    centroid_eng, dump = spatial_utils.convert_eng_airsim(centroid_airsim, [0, 0, 0])
+                    centroid_eng[0] -= execution_time * curr_vel * 2.0  # Compensate for sensor sync
+                    centroid_lidar = np.append(centroid_eng, 1)
+                    centroid_global = np.matmul(lidar_to_map, centroid_lidar)[:3]
+                    # We must track yellow and blue cones within the common (global) frame of reference.
+
+                    centroid_exists = False
+                    # Compare them against all the known tracked objects:
+                    for curr_cone in tracked_cones:
+                        if curr_cone.check_proximity(centroid_global):
+                            centroid_exists = True
+                            curr_cone.process_detection(centroid_global)
+                            if curr_cone.active:
+                                # Estimate color only for active cones, within camera frustum.
+                                # Color estimation is done in the camera frame of reference.
+                                centroid_vehicle = np.matmul(lidar_to_vehicle, centroid_lidar)[:3]
+                                if centroid_vehicle[1] > 0:  # Positive y means left side.
+                                    cone_color = process_camera(lidar_to_left_cam,
+                                                                centroid_lidar,
+                                                                left_cam,
+                                                                left_image,
+                                                                curr_cone, idx, left_copy)
+                                else:
+                                    cone_color = process_camera(lidar_to_right_cam,
+                                                                centroid_lidar,
+                                                                right_cam,
+                                                                right_image,
+                                                                curr_cone, idx, right_copy)
+                            break
+                    # If no centroid is close enough to an existing one, create a new tracker instance:
+                    if not centroid_exists:
+                        new_centroid = tracker_utils.ConeTracker(centroid_global)
+                        tracked_cones.append(new_centroid)
+
+            desired_steer = pursuit_follower.calc_ref_steering(tracked_cones, map_to_vehicle)
+            desired_steer /= pursuit_follower.max_steering  # Convert range to [-1, 1]
+            desired_steer = np.clip(desired_steer, -0.2, 0.2)  # Saturate
+
+            shmem_setpoint.buf[:8] = struct.pack('d', desired_steer)
+            real_steer = struct.unpack('d', shmem_output.buf[:8])[0]
+
+            car_controls.steering = desired_steer
+            client.setCarControls(car_controls)
+            execution_time = time.perf_counter() - last_iteration
+            # print(execution_time)
+
+            if idx > decimation:
+                cv2.imwrite(os.path.join(image_dest, 'left_' + str(save_idx) + '.png'), left_copy)
+                cv2.imwrite(os.path.join(image_dest, 'right_' + str(save_idx) + '.png'), right_copy)
+                save_idx += 1
+                idx = 0
+
+            idx += 1
+        else:
+            time.sleep(0.001)
+
+    if save_data:
+        tracked_objects = {'cones': tracked_cones, 'pursuit': pursuit_follower.pursuit_points}
+        with open(os.path.join(data_dest, 'mapping_session.pickle'), 'wb') as pickle_file:
+            pickle.dump(tracked_objects, pickle_file)
+        print('pickle saved')
+
+    return tracked_cones, pursuit_follower.pursuit_points
 
 
 if __name__ == '__main__':
@@ -240,3 +233,4 @@ if __name__ == '__main__':
     vehicle_controls.throttle = 0.0
     vehicle_controls.brake = 1.0
     airsim_client.setCarControls(vehicle_controls)
+

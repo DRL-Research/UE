@@ -188,7 +188,6 @@ def calculate_distance_in_2d_from_array(position1, position2):
 if __name__ == "__main__":
     import airsim
     import time
-
     client = airsim.CarClient()
     client.confirmConnection()
     time.sleep(1.0)

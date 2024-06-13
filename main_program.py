@@ -5,17 +5,28 @@ import numpy as np
 import plots_utils
 import spline_utils
 import path_control
+from setup_simulation import *
+from airsim_manager import AirsimManager
 import time
 import turn_mapping
 import turn_helper
 
 if __name__ == '__main__':
-    # Create an airsim client instance:
+    # we should get the desired definitions of the simulator by the user: update setting.json & update airsim
+    setup_manager = SetupManager()
+    setup_manager.extract_cars()
+    setup_manager.enableApiCarsControl()
+    airsim_client = setup_manager.airsim_client
+    time.sleep(1.0)
+
     steering_procedure_manager = path_control.SteeringProcManager()
     moving_car_name = "Car1"
     airsim_client = airsim.CarClient()
     airsim_client.confirmConnection()
     airsim_client.enableApiControl(True, vehicle_name=moving_car_name)
+
+    airsim_manager = AirsimManager(airsim_client, setup_manager)
+
     # Detect the cones and spline points, and return their location:
     print('Starting on-the-fly cone mapping with constant speed and steering procedure.')
     #mapping_data, pursuit_points = cone_mapping.mapping_loop(airsim_client)

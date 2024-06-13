@@ -28,7 +28,7 @@
                 "FrontLidar": {
                     "SensorType": 6,
                     "Enabled" : true,
-                    "NumberOfChannels": 2,
+                    "NumberOfChannels": 16,
                     "RotationsPerSecond": 20,
                     "PointsPerSecond": 50000,
                     "X": 2, "Y": 0, "Z": -0.1,
@@ -39,7 +39,7 @@
                     "HorizontalFOVEnd": 90,
                     "DrawDebugPoints": false,
                     "DataFrame": "SensorLocalFrame"
-                }
+                               }
 		},
        "Cameras": {
 			"LeftCam": {
@@ -65,8 +65,8 @@
 				"Pitch": -10, "Roll": 0, "Yaw": 40
 			}
 	  },
-      "X": 0, "Y": 15, "Z": 0,
-      "Pitch": 0, "Roll": 0, "Yaw": 270
+      "X": 0, "Y": 0, "Z": 0,
+      "Pitch": 0, "Roll": 0, "Yaw": 0
     },
     "Car2": {
       "VehicleType": "PhysXCar",
@@ -94,8 +94,8 @@
 				"Pitch": -10, "Roll": 0, "Yaw": 40
 			}
 	  },
-      "X": 5, "Y": 20, "Z": 0,
-      "Pitch": 0, "Roll": 0, "Yaw": 270
+      "X": 5, "Y": -5, "Z": 0,
+      "Pitch": 0, "Roll": 0, "Yaw": 90
     },
     "Car3": {
       "VehicleType": "PhysXCar",
@@ -123,8 +123,37 @@
 				"Pitch": -10, "Roll": 0, "Yaw": 40
 			}
 	  },
-      "X": -20, "Y": 0, "Z": 0,
-      "Pitch": 0, "Roll": 0, "Yaw": 0
+      "X": 10, "Y": 0, "Z": 0,
+      "Pitch": 0, "Roll": 0, "Yaw": 180
+    },
+    "Car4": {
+      "VehicleType": "PhysXCar",
+       "Cameras": {
+			"LeftCam": {
+				"CaptureSettings":
+				  [{
+					"ImageType": 0,
+					"Width": 640,
+					"Height": 360,
+					"FOV_Degrees": 70
+				  }],
+				"X": 2, "Y": -0.5, "Z": -0.5,
+				"Pitch": -10, "Roll": 0, "Yaw": -40
+			},
+			"RightCam": {
+				"CaptureSettings":
+				  [{
+					"ImageType": 0,
+					"Width": 640,
+					"Height": 360,
+					"FOV_Degrees": 70
+				  }],
+				"X": 2, "Y": 0.5, "Z": -0.5,
+				"Pitch": -10, "Roll": 0, "Yaw": 40
+			}
+	  },
+      "X": 5, "Y": 5, "Z": 0,
+      "Pitch": 0, "Roll": 0, "Yaw": 270
     }
   }
 }
