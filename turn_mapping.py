@@ -16,10 +16,13 @@ import spline_utils
 import path_following
 import turn_helper
 from turn_consts import *
+from car_mapping import *
+from setup_simulation import *
 
 decimation = 30e9  # Used to save an output image every X iterations.
 
-def mapping_loop(client, moving_car_name='Car1'):
+
+def mapping_loop(client, moving_car_name='Car1', setup_manager: SetupManager = None):
     global decimation
     image_dest = os.path.join(os.getcwd(), 'images')
     data_dest = os.path.join(os.getcwd(), 'recordings')
@@ -47,6 +50,9 @@ def mapping_loop(client, moving_car_name='Car1'):
 
     # Open access to shared memory blocks:
     shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
+
+    for car_object in setup_manager.cars.values():
+        spatial_utils.set_airsim_pose(client, car_object.name, car_object.initial_position, [90.0, 0, 0])
 
     # Initialize vehicle starting point
     # spatial_utils.set_airsim_pose(client, [0.0, 0.0], [180.0, 0, 0])
