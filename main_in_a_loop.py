@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
         # Follow the spline using Stanley's method:
         print('Starting variable speed spline following procedure.')
-        pickling_objects, car_data = path_following.following_loop(airsim_client, spline_obj)
+        pickling_objects, car_data = path_following.following_loop(airsim_client, spline_obj, moving_car_name=m)
         print('Full process complete! stopping vehicle.')
 
         # Done! stop vehicle:

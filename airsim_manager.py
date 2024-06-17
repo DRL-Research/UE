@@ -72,9 +72,9 @@ class AirsimManager:
         self.set_initial_position_and_yaw(car_name=CAR4_NAME, start_location_x=car4_start_location_x,
                                           start_location_y=car4_start_location_y, car_start_yaw=car4_start_yaw)
 
-        for car_name, car_obj in self.setup_manager.cars.items():
-            if car_obj.is_active:
-                self.setup_manager.set_car_throttle_by_name(car_name)
+        # for car_name, car_obj in self.setup_manager.cars.items():
+        #     if car_obj.is_active:
+        #         self.setup_manager.set_car_throttle_by_name(car_name)
 
     def collision_occurred(self):
         collision_info = self.airsim_client.simGetCollisionInfo()

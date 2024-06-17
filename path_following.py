@@ -62,7 +62,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
     while not turn_completed:
         now = time.perf_counter()
         vehicle_pose = client.simGetVehiclePose(moving_car_name)
-        car_state = client.getCarState()
+        car_state = client.getCarState(moving_car_name)
         curr_vel = car_state.speed
         curr_pos, curr_rot = spatial_utils.extract_pose_from_airsim(vehicle_pose)
         rot_airsim = spatial_utils.extract_rotation_from_airsim(vehicle_pose.orientation)    # yaw, pitch, roll
@@ -82,9 +82,9 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         print(f"vehicle pose {client.simGetVehiclePose(moving_car_name).position}")
         print(f"position global {current_position_global}")
         print(f"position airsim {current_position_airsim}")
-        print(f"object pose: {client.simGetObjectPose('Car1').position}")
+        print(f"object pose: {client.simGetObjectPose(moving_car_name).position}")
         print(f'heading: {curr_rot[0]}')
-        print(f'Steer: {client.getCarControls("Car1").steering}')
+        print(f'Steer: {client.getCarControls(moving_car_name).steering}')
         print(f"distance_from_target_point = {distance_from_target_point}")
 
         current_vehicle_positions_lst.append(current_position_airsim)        # used for plotting
@@ -97,7 +97,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
             # let the car drive in straight line and low speed for few seconds
             car_controls.throttle = 0.2
             car_controls.steering = 0.0
-            client.setCarControls(car_controls)
+            client.setCarControls(car_controls, moving_car_name)
 
             t = time.perf_counter()
             while True:  # keep drive staright for 5 seconds after we finished the turn
@@ -142,7 +142,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         car_controls.throttle = 0.4
 
         car_controls.steering = real_steer
-        client.setCarControls(car_controls)
+        client.setCarControls(car_controls, moving_car_name)
 
     plots_utils.plot_vehicle_relative_path(current_vehicle_positions_lst)
     plots_utils.plot_vehicle_object_path(current_object_positions_lst)  #this plot will plot an overview all vehicle turnings
