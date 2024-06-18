@@ -10,10 +10,10 @@ WEIGHTS_TO_SAVE_NAME = "epochs_0_100"
 GLOBAL_EXPERIMENT = False
 
 # Car start positions and orientations
-CAR1_INITIAL_POSITION = [6, 34, 0]
+CAR1_INITIAL_POSITION = [6, 24, 0]
 CAR2_INITIAL_POSITION = [-19, 1, 0]  # on the left side
 CAR2_SIDE = 'left'
-CAR3_INITIAL_POSITION = [4, -34, 0]
+CAR3_INITIAL_POSITION = [4, -24, 0]
 CAR4_INITIAL_POSITION = [29, -1, 0]  # on the right side
 CAR4_SIDE = 'right'
 
