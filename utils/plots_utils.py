@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 def plot_the_spline(xi, yi,moving_car_name):
     # Plot the points as a line
     plt.figure(figsize=(10, 6))
-    plt.cla()
+    # plt.cla()
     ax = plt.gca()
-    #ax.invert_xaxis()
-    plt.plot(yi, xi, label='Line Plot')
+    ax.invert_yaxis()
+    plt.plot(xi, yi, label='Line Plot')
 
     # Add labels and title
     plt.xlabel('Y-axis')
