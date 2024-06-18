@@ -154,7 +154,10 @@ class SteeringProcManager:
     memories_exist = False
 
     def __init__(self):
-        self.create_steering_procedure()
+        if not self.is_multiprocessing():
+            self.create_steering_procedure()
+        else:
+            print("Running in multiprocessing context, skipping steering procedure creation.")
 
     def __del__(self):
         self.terminate_steering_procedure()
@@ -191,16 +194,18 @@ class SteeringProcManager:
             cls.steer_controller.set_extrema(0.01, 1.0)
             cls.steer_controller.alpha = 0.01
 
-            # Initiate a new process for steering:
-            cls.steering_thread = multiprocessing.Process(target=cls.steer_emulator.async_steering,
-                                                          args=(sample_time, cls.steer_controller),
-                                                          daemon=True)
-            cls.steering_thread.start()
-            time.sleep(2.0)  # New process takes a lot of time to "jumpstart"
+            if not cls.is_multiprocessing():
+                # Initiate a new process for steering:
+                cls.steering_thread = multiprocessing.Process(target=cls.steer_emulator.async_steering,
+                                                              args=(sample_time, cls.steer_controller),
+                                                              daemon=True)
+                cls.steering_thread.start()
+                time.sleep(2.0)  # New process takes a lot of time to "jumpstart"
 
     @classmethod
     def retrieve_shared_memories(cls):
-        cls.create_steering_procedure()
+        if not cls.is_multiprocessing():
+            cls.create_steering_procedure()
 
         shmem_active = shared_memory.SharedMemory(name='active_state', create=False)
         shmem_setpoint = shared_memory.SharedMemory(name='input_value', create=False)
@@ -227,8 +232,13 @@ class SteeringProcManager:
             cls.shmem_active.unlink() #  This removes the shared memory objects, making them unavailable for further use.
             cls.shmem_setpoint.unlink()
             cls.shmem_output.unlink()
-            cls.steering_thread.terminate()
+            if cls.steering_thread is not None:
+                cls.steering_thread.terminate()
             cls.memories_exist = False
+
+    @classmethod
+    def is_multiprocessing(cls):
+        return multiprocessing.current_process().name != "MainProcess"
 
 
 # The function below was not used and left for reference only:

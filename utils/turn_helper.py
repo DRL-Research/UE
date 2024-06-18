@@ -162,11 +162,11 @@ def create_bezier_curve(client, initial_yaw, vehicle_pose, direction, moving_car
     return global_curve_points
 
 
-def filter_tracked_points_and_generate_spline(tracked_points):
+def filter_tracked_points_and_generate_spline(tracked_points,moving_car_name):
     x = [sublist[0] for sublist in tracked_points[::2]]
     y = [sublist[1] for sublist in tracked_points[::2]]
     spline_obj = spline_utils.PathSpline(x, y)
     spline_obj.generate_spline(amount=0.1, meters=True, smoothing=1, summation=len(x))
     print('Done!')
-    plots_utils.plot_the_spline(spline_obj.xi, -1 * spline_obj.yi)
+    plots_utils.plot_the_spline(spline_obj.xi, -1 * spline_obj.yi,moving_car_name)
     return spline_obj
