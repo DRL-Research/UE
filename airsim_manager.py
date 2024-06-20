@@ -149,4 +149,5 @@ class AirsimManager:
         initial_position_car = airsim.Vector3r(start_location_x, start_location_y, -1)
         initial_orientation_car = airsim.to_quaternion(0, 0, car_start_yaw_rad)  # Roll, Pitch, Yaw
         initial_pose_car = airsim.Pose(initial_position_car, initial_orientation_car)
-        self.airsim_client.simSetVehiclePose(initial_pose_car, True, car_name)
+        #self.airsim_client.simSetVehiclePose(initial_pose_car, True, car_name)
+        self.airsim_client.simSetObjectPose(car_name, initial_pose_car, True)
