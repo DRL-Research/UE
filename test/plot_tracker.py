@@ -1,9 +1,8 @@
 import numpy as np
 import pickle
 from matplotlib import pyplot as plt
-import time
-import tracker_utils
-import spline_utils
+from perception import tracker_utils
+from path_planning import spline_utils
 
 with open('tracker_session.pickle', 'rb') as handle:
     tracker_data = pickle.load(handle)

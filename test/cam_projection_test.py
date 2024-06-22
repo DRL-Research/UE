@@ -1,9 +1,7 @@
 import numpy as np
 import pickle
-from matplotlib import pyplot as plt
-import camera_utils
+from perception import camera_utils, tracker_utils
 import spatial_utils
-import tracker_utils
 import cv2
 import time
 import os

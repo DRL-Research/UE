@@ -1,33 +1,15 @@
-import numpy as np
+from utils.perception import camera_utils
+from utils.path_planning import path_control, turn_helper
+from perception.car_mapping import *
+from initialization.setup_simulation import *
 import time
-import pickle
-from sklearn.cluster import DBSCAN
-import airsim
-import dbscan_utils
-import spatial_utils
-import tracker_utils
-from turn_consts import *
-import camera_utils
-import path_control
-import os
-import cv2
-import struct
-import bezier
-import spline_utils
-import path_following
-import turn_consts
-import turn_helper
-from turn_consts import *
-from car_mapping import *
-from setup_simulation import *
-
 decimation = 30e9  # Used to save an output image every X iterations.
 
 
 def mapping_loop(client, moving_car_name='Car1', direction=None):
     global decimation
-    image_dest = os.path.join(os.getcwd(), 'images')
-    data_dest = os.path.join(os.getcwd(), 'recordings')
+    image_dest = os.path.join(os.getcwd(), '../images')
+    data_dest = os.path.join(os.getcwd(), '../recordings')
     os.makedirs(image_dest, exist_ok=True)
     os.makedirs(data_dest, exist_ok=True)
     save_data = False

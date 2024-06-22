@@ -1,9 +1,4 @@
-import airsim
-import numpy as np
-import random
-from config import CAR1_INITIAL_POSITION, CAR2_INITIAL_POSITION, CAR1_INITIAL_YAW, CAR2_INITIAL_YAW, \
-    CAR1_NAME, CAR2_NAME, CAR1_DESIRED_POSITION
-from setup_simulation import *
+from initialization.setup_simulation import *
 
 
 class AirsimManager:

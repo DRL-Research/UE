@@ -1,7 +1,6 @@
 import numpy as np
 from scipy import interpolate
-from matplotlib import pyplot as plt
-import tracker_utils
+from utils.perception import tracker_utils
 
 
 class PathSpline:
@@ -164,7 +163,10 @@ class PathSpline:
         """
         prev_unit_vec = (curr_p - prev_p) / np.linalg.norm(curr_p - prev_p)
         next_unit_vec = (next_p - curr_p) / np.linalg.norm(next_p - curr_p)
-        base_angle = np.arccos(np.dot(prev_unit_vec, next_unit_vec))
+        # Ensure dot product is within valid range for arccos
+        dot_product = np.clip(np.dot(prev_unit_vec, next_unit_vec), -1.0, 1.0)
+
+        base_angle = np.arccos(dot_product)
         base_length = np.linalg.norm(next_p - prev_p)
         curvature = 2 * np.sin(base_angle) / base_length
         if curvature < 1e-4:  # Meaningless value for our purpose

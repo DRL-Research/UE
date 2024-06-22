@@ -1,11 +1,9 @@
 import numpy as np
-import pickle
 import csv
 import os
 import airsim
-import pidf_controller
+from path_planning import pidf_controller, discrete_plant_emulator
 import spatial_utils
-import discrete_plant_emulator
 import time
 from matplotlib import pyplot as plt
 
