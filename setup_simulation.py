@@ -39,6 +39,7 @@ class SetupManager:
         active = [True] * self.n_active_cars
         inactive = [False] * (self.max_cars_we_can_handle-self.n_active_cars)
         is_active_per_car = active + inactive
+
         car1 = Car(name=CAR1_NAME, speed=0.0, yaw=CAR1_INITIAL_YAW, initial_position=CAR1_INITIAL_POSITION,
                    destination=CAR1_DESIRED_POSITION, is_active=is_active_per_car[0])
         car2 = Car(name=CAR2_NAME, speed=0.0, yaw=CAR2_INITIAL_YAW, initial_position=CAR2_INITIAL_POSITION,
@@ -53,7 +54,8 @@ class SetupManager:
 
     def enableApiCarsControl(self):
         for car_id, car_object in self.cars.items():
-            self.airsim_client.enableApiControl(is_enabled=True, vehicle_name=car_object.name)
+            if not self.airsim_client.isApiControlEnabled(car_object.name):
+                self.airsim_client.enableApiControl(is_enabled=True, vehicle_name=car_object.name)
 
     def set_car_throttle_by_name(self, car_name, throttle=0.4):
         car_controls = airsim.CarControls()

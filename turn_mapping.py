@@ -6,6 +6,7 @@ import airsim
 import dbscan_utils
 import spatial_utils
 import tracker_utils
+from turn_consts import *
 import camera_utils
 import path_control
 import os
@@ -14,6 +15,7 @@ import struct
 import bezier
 import spline_utils
 import path_following
+import turn_consts
 import turn_helper
 from turn_consts import *
 from car_mapping import *
@@ -22,7 +24,7 @@ from setup_simulation import *
 decimation = 30e9  # Used to save an output image every X iterations.
 
 
-def mapping_loop(client, moving_car_name='Car1', setup_manager: SetupManager = None):
+def mapping_loop(client, moving_car_name='Car1', direction=None):
     global decimation
     image_dest = os.path.join(os.getcwd(), 'images')
     data_dest = os.path.join(os.getcwd(), 'recordings')
@@ -80,8 +82,8 @@ def mapping_loop(client, moving_car_name='Car1', setup_manager: SetupManager = N
 
     try:
         tracked_points_bezier = turn_helper.create_bezier_curve(client, initial_yaw, vehicle_pose,
-                                                                direction="left",
-                                                                moving_car_name=moving_car_name)
+                                                                direction=direction, moving_car_name=moving_car_name)
         return tracked_points_bezier, execution_time, curr_vel, vehicle_to_map
     except:
         raise Exception("Turn Mapping Problem")
+

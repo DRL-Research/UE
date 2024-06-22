@@ -1,10 +1,11 @@
 import multiprocessing
 import os
+import random
 import threading
 import airsim
 import numpy as np
 import time
-
+from turn_consts import *
 import plots_utils
 from setup_simulation import SetupManager
 import turn_mapping
@@ -22,11 +23,11 @@ def initialize_setup():
     time.sleep(0.5)
     airsim_client.confirmConnection()
     airsim_manager = AirsimManager(airsim_client, setup_manager)
-    return airsim_client
+    return airsim_client, airsim_manager
 
 # Function to run the car processing
-def run_for_car(moving_car_name):
-    airsim_client = initialize_setup()
+def run_for_single_car(moving_car_name):
+    airsim_client, airsim_manager = initialize_setup()
 
     # Ensure SteeringProcManager initialization
     path_control.SteeringProcManager.create_steering_procedure()  # Initialize shared memory
@@ -34,11 +35,13 @@ def run_for_car(moving_car_name):
     try:
         # Use retrieved shared memories
         shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
-
+        directions = [TURN_DIRECTION_STRAIGHT]  #TURN_DIRECTION_RIGHT, TURN_DIRECTION_LEFT,
+        direction = random.choices(directions, k=1)[0]
         # Detect the cones and spline points, and return their location:
         print(f'Starting on-the-fly cone mapping with constant speed and steering procedure for {moving_car_name}.')
         tracked_points, execution_time, curr_vel, transition_matrix = turn_mapping.mapping_loop(airsim_client,
-                                                                                                moving_car_name)
+                                                                                                moving_car_name,
+                                                                                                direction)
 
         print(f'Mapping complete for {moving_car_name}!')
 
@@ -48,12 +51,11 @@ def run_for_car(moving_car_name):
         car_controls.throttle = 0.0
         airsim_client.setCarControls(car_controls, vehicle_name=moving_car_name)
 
-        spline_obj = turn_helper.filter_tracked_points_and_generate_spline(tracked_points,moving_car_name)
+        spline_obj = turn_helper.filter_tracked_points_and_generate_spline(tracked_points, moving_car_name)
 
         # Follow the spline using Stanley's method:
         print(f'Starting variable speed spline following procedure for {moving_car_name}.')
-        positions_lst = path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel,
-                                                      transition_matrix, moving_car_name=moving_car_name)
+        positions_lst = path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel,transition_matrix, moving_car_name=moving_car_name)
 
         print(f'Full process complete for {moving_car_name}! Stopping vehicle.')
         car_controls.throttle = 0.0
@@ -73,15 +75,13 @@ if __name__ == '__main__':
 
     # Define the car names
     # moving_car_names = ["Car2","Car3", "Car4"]  # Add more car names as needed
-    moving_car_names = ["Car1","Car2","Car3","Car4"]  # Add more car names as needed
-
+    moving_car_names = ["Car2", "Car4", "Car3"]#,"Car4"]  # Add more car names as needed
     all_cars_positions_list = []
-
 
     # Create a process pool
     with multiprocessing.Pool(processes=len(moving_car_names)+1) as pool:
         # Submit tasks to the process pool
-        results = pool.map(run_for_car, moving_car_names)
+        results = pool.map(run_for_single_car, moving_car_names)
 
     # Append results to all_cars_positions_list
     for result in results:
