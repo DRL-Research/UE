@@ -1,12 +1,8 @@
-import copy
 import os.path
 import matplotlib.pyplot as plt
-import numpy as np
-
-import dbscan_utils
-import spatial_utils
-from car_detection_experiments_helper import *
-from dbscan_utils import *
+from utils.perception import dbscan_utils
+from utils.perception.car_detection_experiments_helper import *
+from utils.perception.dbscan_utils import *
 
 yaw_mapping = {0: '^', 90: '>', 180: 'v', 270: '<'}
 

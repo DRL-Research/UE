@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 import numpy as np
-from scipy.spatial.transform import Rotation as Rot
 import time
 import pickle
-import csv
-from matplotlib import pyplot as plt
 from sklearn.cluster import DBSCAN
 import airsim
-import dbscan_utils
+from perception import dbscan_utils
 from spatial_utils import set_initial_pose
 
 

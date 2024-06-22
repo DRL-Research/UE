@@ -1,13 +1,6 @@
-import json
-import time
-from enum import Enum
 from typing import NamedTuple, Dict
 import airsim
-from config import *
-
-
-class JsonKeys(Enum):
-    NUMBER_OF_ACTIVE_CARS = "Number-Of-Active-Cars"
+from initialization.config import *
 
 
 class Car(NamedTuple):
@@ -24,13 +17,9 @@ class CarDict(Dict[str, Car]):
 
 
 class SetupManager:
-    def __init__(self, setup_simulation_path='config.json', airsim_settings_path=''):
-        self.setup_simulation_path = setup_simulation_path
-        with open(setup_simulation_path, 'r') as f:
-            self._data = json.load(f)
-        self.n_active_cars = self._data[JsonKeys.NUMBER_OF_ACTIVE_CARS.value]
+    def __init__(self):
+        self.n_active_cars = NUMBER_OF_CAR_IN_SIMULATION
         self.cars = CarDict()
-        self.airsim_settings_full_path = airsim_settings_path + "/setting.json"
         self.airsim_client = airsim.CarClient()
         self.airsim_client.confirmConnection()
         self.max_cars_we_can_handle = 4

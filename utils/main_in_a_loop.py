@@ -1,12 +1,9 @@
-import cone_mapping
-import path_following
+from perception import cone_mapping
 import airsim
-import spline_utils
-import path_control
+from path_planning import path_control, spline_utils, path_following
 import os
 import pickle
 import csv
-import time
 
 if __name__ == '__main__':
 
@@ -17,7 +14,7 @@ if __name__ == '__main__':
     airsim_client.enableApiControl(True)
 
     for run_idx in range(10):
-        data_dest = os.path.join(os.getcwd(), 'recordings', 'recording' + str(run_idx))
+        data_dest = os.path.join(os.getcwd(), '../recordings', 'recording' + str(run_idx))
         os.makedirs(data_dest)
 
         # Detect the cones and spline points, and return their location:

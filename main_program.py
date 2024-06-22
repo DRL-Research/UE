@@ -2,17 +2,14 @@ import multiprocessing
 import os
 import random
 import threading
-import airsim
-import numpy as np
 import time
-from turn_consts import *
+from initialization.config import *
 import plots_utils
-from setup_simulation import SetupManager
-import turn_mapping
-import path_following
-import path_control  # Assuming this is where your SteeringProcManager is defined
+from initialization.setup_simulation import SetupManager
+from path_planning import  turn_mapping, path_following
+from utils.path_planning import path_control, turn_helper
 from airsim_manager import AirsimManager
-import turn_helper
+
 
 # Function to initialize setup and return airsim_client
 def initialize_setup():
@@ -55,7 +52,7 @@ def run_for_single_car(moving_car_name):
 
         # Follow the spline using Stanley's method:
         print(f'Starting variable speed spline following procedure for {moving_car_name}.')
-        positions_lst = path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel,transition_matrix, moving_car_name=moving_car_name)
+        positions_lst = path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel, transition_matrix, moving_car_name=moving_car_name)
 
         print(f'Full process complete for {moving_car_name}! Stopping vehicle.')
         car_controls.throttle = 0.0

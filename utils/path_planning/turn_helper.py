@@ -1,13 +1,8 @@
-import airsim
-import numpy as np
-import bezier
-import path_following
 import plots_utils
-import spline_utils
+from path_planning import bezier
+from utils.path_planning import spline_utils
 import spatial_utils
-import math
-from turn_consts import *
-from plots_utils import *
+from initialization.config import *
 
 
 def airsim_point_to_global_full_version(airsim_point, execution_time, curr_vel, transition_matrix):

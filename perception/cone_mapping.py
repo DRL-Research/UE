@@ -1,18 +1,11 @@
-import numpy as np
-import time
 import pickle
-from sklearn.cluster import DBSCAN
-import airsim
-import dbscan_utils
-import spatial_utils
-import tracker_utils
-import camera_utils
-import path_control
-import os
+from datetime import time
+from perception import camera_utils, tracker_utils
+from utils.path_planning import path_control
 import cv2
 import struct
-from car_mapping import *
-from setup_simulation import *
+from perception.car_mapping import *
+from initialization.setup_simulation import *
 
 decimation = 30e9  # Used to save an output image every X iterations.
 
@@ -44,8 +37,8 @@ def process_camera(lidar_to_cam, vector, camera, image, tracked_cone, idx, copy_
 
 def mapping_loop(client, setup_manager: SetupManager):
     global decimation
-    image_dest = os.path.join(os.getcwd(), 'images')
-    data_dest = os.path.join(os.getcwd(), 'recordings')
+    image_dest = os.path.join(os.getcwd(), '../images')
+    data_dest = os.path.join(os.getcwd(), '../recordings')
     os.makedirs(image_dest, exist_ok=True)
     os.makedirs(data_dest, exist_ok=True)
     save_data = False
@@ -187,6 +180,7 @@ def mapping_loop(client, setup_manager: SetupManager):
             shmem_setpoint.buf[:8] = struct.pack('d', desired_steer)
             real_steer = struct.unpack('d', shmem_output.buf[:8])[0]
 
+            car_controls = airsim_client.getCarControls()
             car_controls.steering = desired_steer
             client.setCarControls(car_controls)
             execution_time = time.perf_counter() - last_iteration

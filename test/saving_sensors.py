@@ -1,11 +1,8 @@
 #!/usr/bin/env python
-from spline_utils import PathSpline
 import numpy as np
 import airsim
-from scipy.spatial.transform import Rotation as Rot
 import time
 import pickle
-import multiprocessing
 from spatial_utils import set_initial_pose
 import csv
 

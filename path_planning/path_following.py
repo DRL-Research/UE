@@ -12,8 +12,6 @@
 # import struct
 # import csv
 # import os
-# from turn_consts import *
-# from follow_handler_consts import *
 #
 #
 # def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, transition_matrix=None, moving_car_name="Car1"):
@@ -225,26 +223,20 @@
 #     vehicle_controls.brake = 1.0
 #     airsim_client.setCarControls(vehicle_controls)
 
-import math
 import plots_utils
-import turn_helper
-from spline_utils import PathSpline
-import numpy as np
+from utils.path_planning.spline_utils import PathSpline
 import airsim
 import time
-import pickle
 import spatial_utils
-import path_control
-from pidf_controller import PidfControl
+from utils.path_planning import path_control, turn_helper
+from utils.path_planning.pidf_controller import PidfControl
 import struct
-import csv
 import os
-from turn_consts import *
-from follow_handler_consts import *
+from initialization.config import *
 
 
 def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, transition_matrix=None, moving_car_name="Car1"):
-    data_dest = os.path.join(os.getcwd(), 'recordings')
+    data_dest = os.path.join(os.getcwd(), '../recordings')
     os.makedirs(data_dest, exist_ok=True)
     save_data = False
 

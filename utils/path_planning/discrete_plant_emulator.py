@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from pidf_controller import PidfControl
+from path_planning.pidf_controller import PidfControl
 import time
 import csv
 import multiprocessing

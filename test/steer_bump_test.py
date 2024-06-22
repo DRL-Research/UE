@@ -1,12 +1,9 @@
 #!/usr/bin/env python
-from spline_utils import PathSpline
 import numpy as np
 import airsim
 from scipy.spatial.transform import Rotation as Rot
 import time
 from matplotlib import pyplot as plt
-import csv
-import pickle
 
 
 def set_initial_pose(airsim_client, desired_position, desired_heading):

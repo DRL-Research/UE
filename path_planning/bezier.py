@@ -1,5 +1,3 @@
-import numpy as np
-
 
 def quadratic_bezier(t, p0, p1, p2):
     u = 1 - t

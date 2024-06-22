@@ -1,7 +1,6 @@
 import numpy as np
 from scipy import interpolate
-from matplotlib import pyplot as plt
-import tracker_utils
+from utils.perception import tracker_utils
 
 
 class PathSpline:

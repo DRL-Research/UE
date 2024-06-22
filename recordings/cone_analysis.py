@@ -1,12 +1,9 @@
 import numpy as np
 import pickle
 import csv
-import tracker_utils
-import spline_utils
-from matplotlib import pyplot as plt
+from perception import tracker_utils
+from path_planning import spline_utils
 import os
-import sys
-import time
 
 COLOR_UNKNOWN = tracker_utils.ConeTracker.COLOR_UNKNOWN
 COLOR_BLUE = tracker_utils.ConeTracker.COLOR_BLUE
