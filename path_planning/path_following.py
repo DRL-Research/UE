@@ -304,7 +304,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         yaw_is_180 = ONE_EIGHTY_YAW_LOW_BOUNDREY <= abs(current_yaw) <= ONE_EIGHTY_YAW_HIGH_BOUNDERY
         yaw_is_90 = NINETY_YAW_LOW_BOUNDREY <= abs(current_yaw) <= NINETY_YAW_HIGH_BOUNDERY
 
-        if distance_from_target_point < 2.0 and (yaw_is_90 or yaw_is_0 or yaw_is_180):
+        if distance_from_target_point < 0.5:# and (yaw_is_90 or yaw_is_0 or yaw_is_180):
             car_controls.throttle = 0.2
             car_controls.steering = 0.0
             client.setCarControls(car_controls, moving_car_name)
@@ -343,9 +343,9 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         car_controls.steering = desired_steer
         client.setCarControls(car_controls, moving_car_name)
 
-    plots_utils.plot_vehicle_relative_path(current_vehicle_positions_lst,moving_car_name)
+    #plots_utils.plot_vehicle_relative_path(current_vehicle_positions_lst,moving_car_name)
     # plots_utils.plot_vehicle_object_path(current_object_positions_lst)
-    plots_utils.combine_plot(spline_obj.xi, spline_obj.yi, current_vehicle_positions_lst,moving_car_name)
+    #plots_utils.combine_plot(spline_obj.xi, spline_obj.yi, current_vehicle_positions_lst,moving_car_name)
     return current_vehicle_positions_lst
 
 

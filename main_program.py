@@ -28,7 +28,7 @@ def run_for_single_car(moving_car_name):
 
     # Ensure SteeringProcManager initialization
     path_control.SteeringProcManager.create_steering_procedure()  # Initialize shared memory
-
+    positions_lst = []
     try:
         # Use retrieved shared memories
         shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
@@ -58,41 +58,30 @@ def run_for_single_car(moving_car_name):
         car_controls.throttle = 0.0
         car_controls.brake = 1.0
         airsim_client.setCarControls(car_controls, vehicle_name=moving_car_name)
-        return positions_lst
+        return positions_lst, moving_car_name
 
     finally:
         # Always clean up after use
         # path_control.SteeringProcManager.detach_shared_memories() #todo: if its not comment it fucks up the program
         # path_control.SteeringProcManager.terminate_steering_procedure()
-        return positions_lst
+        return positions_lst, moving_car_name
+
 
 if __name__ == '__main__':
     print("ID of process running main program: {}".format(os.getpid()))
     print("Main thread name: {}".format(threading.current_thread().name))
 
-    # Define the car names
-    # moving_car_names = ["Car2","Car3", "Car4"]  # Add more car names as needed
     moving_car_names = ["Car2", "Car4", "Car3"]#,"Car4"]  # Add more car names as needed
     all_cars_positions_list = []
 
     # Create a process pool
     with multiprocessing.Pool(processes=len(moving_car_names)+1) as pool:
         # Submit tasks to the process pool
-        results = pool.map(run_for_single_car, moving_car_names)
+        car_locations_by_name = pool.map(run_for_single_car, moving_car_names)
 
-    # Append results to all_cars_positions_list
-    for result in results:
-        all_cars_positions_list.append(result)
+    for car_locations, car_name in car_locations_by_name:
+        all_cars_positions_list.append((car_locations, car_name))
 
-    ## here i want to append the positions_lst that return from run_for_car of each procces to the all_cars_positions_list
-    x=all_cars_positions_list
     plots_utils.plot_vehicle_object_path(all_cars_positions_list)
-
     print('All cars have completed their tasks.')
-
-
-
-
-
-
 

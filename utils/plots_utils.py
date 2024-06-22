@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 
-def plot_the_spline(xi, yi,moving_car_name):
+def plot_the_spline(xi, yi, moving_car_name):
     # Plot the points as a line
     plt.figure(figsize=(10, 6))
     # plt.cla()
@@ -20,12 +20,12 @@ def plot_the_spline(xi, yi,moving_car_name):
     # Display the plot
     plt.show()
 
-def plot_vehicle_relative_path(points,moving_car_name):
 
+def plot_vehicle_relative_path(points, moving_car_name):
     plt.figure(figsize=(10, 6))
     plt.cla()
     ax = plt.gca()
-    #ax.invert_xaxis()
+    # ax.invert_xaxis()
 
     # Extract x and y coordinates
     x_coords = [point[0] for point in points]
@@ -45,6 +45,7 @@ def plot_vehicle_relative_path(points,moving_car_name):
 
     plt.grid(True)
     plt.show()
+
 
 # def plot_vehicle_object_path(points):
 #     # todo: modify function to plot all vehicle paths - will get list of ponits for each vehcile
@@ -66,11 +67,11 @@ def plot_vehicle_relative_path(points,moving_car_name):
 #     plt.grid(True)
 #     plt.show()
 
-def combine_plot(xi, yi, points,moving_car_name):
+def combine_plot(xi, yi, points, moving_car_name):
     plt.figure(figsize=(10, 6))
     plt.cla()
     ax = plt.gca()
-    #ax.invert_xaxis()
+    # ax.invert_xaxis()
 
     x_coords = [point[0] for point in points]
     y_coords = [point[1] for point in points]
@@ -80,11 +81,11 @@ def combine_plot(xi, yi, points,moving_car_name):
 
     print('-' * 75)
     # -1 to convert to airsim for the plot
-    print(f"route start at: {xi[0], -1*yi[0]}")
+    print(f"route start at: {xi[0], -1 * yi[0]}")
     print(f"car start: {points[0][0], points[0][1]}")
     print('-' * 75)
     # -1 to convert to airsim for the plot
-    plt.plot(-1*yi, xi,color='red', label='bezier')
+    plt.plot(-1 * yi, xi, color='red', label='bezier')
     # plt.plot(y_coords, x_coords, marker='o', linestyle='-',color='green',label='actual')
     plt.plot(y_coords, x_coords, color='green', label='actual')
 
@@ -95,8 +96,9 @@ def combine_plot(xi, yi, points,moving_car_name):
     plt.legend()
     plt.show()
 
+
 def plot_vehicle_object_path(list_of_points):
-  """
+    """
   Plots multiple vehicle paths from a list of lists of points.
 
   Args:
@@ -104,22 +106,30 @@ def plot_vehicle_object_path(list_of_points):
                       as a series of [x, y] coordinates.
   """
 
-  plt.figure(figsize=(10, 6))
-  ax = plt.gca()
-  ax.invert_yaxis()
+    plt.figure(figsize=(10, 6))
+    ax = plt.gca()
+    ax.invert_yaxis()
 
-  # Define a color list for different vehicles (feel free to customize colors)
-  colors = ['b', 'g', 'r', 'c', 'm']
+    # Define a color list for different vehicles (feel free to customize colors)
+    colors = ['b', 'g', 'r', 'c']
+    offset = 1
+    # Loop through each list of points and plot them in a different color
+    for vehicle_points, car_name in list_of_points:
+        x_coords = [point[0] for point in vehicle_points]
+        y_coords = [point[1] for point in vehicle_points]
+        i = int(car_name[-1])
+        if i == 1 or i == 2:
+            offset = 2
+        elif i == 3 or i == 4:
+            offset = -2
+        plt.plot(x_coords, y_coords, marker='o', linestyle='-', label=f" {car_name}", color=colors[i % len(colors)])
+        plt.text(x_coords[0], y_coords[0]+offset, f'{car_name} start', fontsize=11,
+                 va='top', ha='right', fontweight='bold')
+        plt.scatter(x_coords[0], y_coords[0], color='black', s=100, zorder=5)
 
-  # Loop through each list of points and plot them in a different color
-  for i, vehicle_points in enumerate(list_of_points):
-      x_coords = [point[0] for point in vehicle_points]
-      y_coords = [point[1] for point in vehicle_points]
-      plt.plot(x_coords, y_coords, marker='o', linestyle='-', label=f"Vehicle {i+1}", color=colors[i % len(colors)])
-
-  plt.title('Vehicle Paths')
-  plt.xlabel('X Coordinate')
-  plt.ylabel('Y Coordinate')
-  plt.legend()  # Add legend to identify vehicle paths
-  plt.grid(True)
-  plt.show()
+    plt.title('Vehicle Paths - Airsim Coordinates')
+    plt.xlabel('X Coordinate')
+    plt.ylabel('Y Coordinate')
+    plt.legend()  # Add legend to identify vehicle paths
+    plt.grid(True)
+    plt.show()
