@@ -2,7 +2,7 @@ from utils.perception import camera_utils
 from utils.path_planning import path_control, turn_helper
 from perception.car_mapping import *
 from initialization.setup_simulation import *
-
+import time
 decimation = 30e9  # Used to save an output image every X iterations.
 
 

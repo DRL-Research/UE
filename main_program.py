@@ -32,7 +32,7 @@ def run_for_single_car(moving_car_name):
     try:
         # Use retrieved shared memories
         shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
-        directions = [TURN_DIRECTION_STRAIGHT]  #TURN_DIRECTION_RIGHT, TURN_DIRECTION_LEFT,
+        directions = [TURN_DIRECTION_STRAIGHT, TURN_DIRECTION_RIGHT, TURN_DIRECTION_LEFT]
         direction = random.choices(directions, k=1)[0]
         # Detect the cones and spline points, and return their location:
         print(f'Starting on-the-fly cone mapping with constant speed and steering procedure for {moving_car_name}.')
