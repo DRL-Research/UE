@@ -32,19 +32,22 @@ class AirsimManager:
         # pick at random (car 2 goes from left/right)
         left_or_right = [-1, 1]  # random.choice([1, -1])
 
-        car1_start_location_x = CAR1_INITIAL_POSITION[0] - self.car_name_to_offset[CAR1_NAME]['x_offset']
-        car1_start_location_y = CAR1_INITIAL_POSITION[1] - self.car_name_to_offset[CAR1_NAME]['y_offset']
+        car1_start_location_x = CAR1_INITIAL_POSITION[0] - self.car_name_to_offset[CAR1_NAME]['x_offset']  # 6 - 0
+        car1_start_location_y = CAR1_INITIAL_POSITION[1] - self.car_name_to_offset[CAR1_NAME]['y_offset']  # 24 - 0
 
-        car2_start_location_x = CAR2_INITIAL_POSITION[0] - self.car_name_to_offset[CAR2_NAME]['x_offset']
+        # -24, 6
+        car2_start_location_x = CAR2_INITIAL_POSITION[0] - self.car_name_to_offset[CAR2_NAME]['x_offset']  # -19 - 5
         car2_side = left_or_right[0] if CAR2_SIDE == 'left' else left_or_right[1]
-        car2_start_location_y = car2_side * CAR2_INITIAL_POSITION[1] - self.car_name_to_offset[CAR2_NAME]['y_offset']
+        car2_start_location_y = car2_side * CAR2_INITIAL_POSITION[1] - self.car_name_to_offset[CAR2_NAME]['y_offset']  # 1 + 5
 
-        car3_start_location_x = CAR3_INITIAL_POSITION[0] - self.car_name_to_offset[CAR3_NAME]['x_offset']
-        car3_start_location_y = CAR3_INITIAL_POSITION[1] - self.car_name_to_offset[CAR3_NAME]['y_offset']
+        # -6, -24
+        car3_start_location_x = CAR3_INITIAL_POSITION[0] - self.car_name_to_offset[CAR3_NAME]['x_offset']  # 4 - 10
+        car3_start_location_y = CAR3_INITIAL_POSITION[1] - self.car_name_to_offset[CAR3_NAME]['y_offset']  # -24 - 0
 
-        car4_start_location_x = CAR4_INITIAL_POSITION[0] - self.car_name_to_offset[CAR4_NAME]['x_offset']
+        # 24, -6
+        car4_start_location_x = CAR4_INITIAL_POSITION[0] - self.car_name_to_offset[CAR4_NAME]['x_offset']  # 29 - 5
         car4_side = left_or_right[0] if CAR4_SIDE == 'left' else left_or_right[1]
-        car4_start_location_y = car4_side * CAR4_INITIAL_POSITION[1] - self.car_name_to_offset[CAR4_NAME]['y_offset']
+        car4_start_location_y = car4_side * CAR4_INITIAL_POSITION[1] - self.car_name_to_offset[CAR4_NAME]['y_offset'] # -1 - 5
 
         car1_start_yaw = CAR1_INITIAL_YAW
         car2_start_yaw = CAR2_INITIAL_YAW
@@ -69,9 +72,9 @@ class AirsimManager:
         self.set_initial_position_and_yaw(car_name=CAR4_NAME, start_location_x=car4_start_location_x,
                                           start_location_y=car4_start_location_y, car_start_yaw=car4_start_yaw)
 
-        for car_name, car_obj in self.setup_manager.cars.items():
-            if car_obj.is_active:
-                self.setup_manager.set_car_throttle_by_name(car_name)
+        # for car_name, car_obj in self.setup_manager.cars.items():
+        #     if car_obj.is_active:
+        #         self.setup_manager.set_car_throttle_by_name(car_name)
 
     def collision_occurred(self):
         collision_info = self.airsim_client.simGetCollisionInfo()
@@ -146,4 +149,5 @@ class AirsimManager:
         initial_position_car = airsim.Vector3r(start_location_x, start_location_y, -1)
         initial_orientation_car = airsim.to_quaternion(0, 0, car_start_yaw_rad)  # Roll, Pitch, Yaw
         initial_pose_car = airsim.Pose(initial_position_car, initial_orientation_car)
-        self.airsim_client.simSetVehiclePose(initial_pose_car, True, car_name)
+        #self.airsim_client.simSetVehiclePose(initial_pose_car, True, car_name)
+        self.airsim_client.simSetObjectPose(car_name, initial_pose_car, True)

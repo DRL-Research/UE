@@ -10,11 +10,11 @@ WEIGHTS_TO_SAVE_NAME = "epochs_0_100"
 GLOBAL_EXPERIMENT = False
 
 # Car start positions and orientations
-CAR1_INITIAL_POSITION = [0, 0, 0]
-CAR2_INITIAL_POSITION = [30, 20, 0]  # on the left side
+CAR1_INITIAL_POSITION = [6, 24, 0]
+CAR2_INITIAL_POSITION = [-19, 1, 0]  # on the left side
 CAR2_SIDE = 'left'
-CAR3_INITIAL_POSITION = [60, 0, 0]
-CAR4_INITIAL_POSITION = [30, 20, 0]  # on the right side
+CAR3_INITIAL_POSITION = [4, -24, 0]
+CAR4_INITIAL_POSITION = [29, -1, 0]  # on the right side
 CAR4_SIDE = 'right'
 
 # NOTE - for now we dont use it
@@ -23,10 +23,10 @@ CAR2_DESIRED_POSITION = np.array([10, 0, 0])
 CAR3_DESIRED_POSITION = np.array([10, 0, 0])
 CAR4_DESIRED_POSITION = np.array([10, 0, 0])
 
-CAR1_INITIAL_YAW = 0
-CAR2_INITIAL_YAW = 90
-CAR3_INITIAL_YAW = 180
-CAR4_INITIAL_YAW = 270
+CAR1_INITIAL_YAW = 270  # 0
+CAR2_INITIAL_YAW = 0  # 90
+CAR3_INITIAL_YAW = 90  # 180
+CAR4_INITIAL_YAW = 180  # 270
 
 # Training configuration
 ALTERNATE_TRAINING_EPISODE_AMOUNT = 10  # after how many episodes the local network of car1 is copied to car2
