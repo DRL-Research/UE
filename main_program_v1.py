@@ -3,6 +3,9 @@ import os
 import random
 import threading
 import time
+
+import airsim
+
 from initialization.config_v1 import *
 import plots_utils_v1
 from initialization.setup_simulation_v1 import SetupManager
@@ -22,7 +25,6 @@ def initialize_setup():
 # Function to run the car processing
 def run_for_single_car(moving_car_name):
     airsim_manager = initialize_setup()
-
     # Ensure SteeringProcManager initialization
     path_control_v1.SteeringProcManager.create_steering_procedure()  # Initialize shared memory
 
@@ -31,6 +33,7 @@ def run_for_single_car(moving_car_name):
         shmem_active, shmem_setpoint, shmem_output = path_control_v1.SteeringProcManager.retrieve_shared_memories()
         directions = [TURN_DIRECTION_STRAIGHT, TURN_DIRECTION_RIGHT, TURN_DIRECTION_LEFT]
         direction = random.choices(directions, k=1)[0]
+        print(f'car name: {moving_car_name}, direction: {direction}')
         # Detect the cones and spline points, and return their location:
         print(f'Starting on-the-fly cone mapping with constant speed and steering procedure for {moving_car_name}.')
         tracked_points, execution_time, curr_vel, transition_matrix = turn_mapping_v1.mapping_loop(airsim_manager.airsim_client,
@@ -51,6 +54,7 @@ def run_for_single_car(moving_car_name):
 
         print(f'Full process complete for {moving_car_name}! Stopping vehicle.')
         airsim_manager.stop_car(moving_car_name)
+
         return positions_lst
 
     finally:

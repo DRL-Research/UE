@@ -20,7 +20,7 @@ def following_loop(client, spline=None, execution_time=None, curr_vel=None,
     shmem_active, shmem_setpoint, shmem_output = path_control_v1.SteeringProcManager.retrieve_shared_memories()
 
     # Define Stanley-method parameters:
-    follow_handler = path_control_v1.StanleyFollower(spline, MAX_VELOCITY, MIN_VELOCITY, LOOKAHEAD, K_STEER)
+    follow_handler = path_control_v1.StanleyFollower(spline_obj, MAX_VELOCITY, MIN_VELOCITY, LOOKAHEAD, K_STEER)
     follow_handler.k_vel *= K_VEL
 
     # Define speed controller:
