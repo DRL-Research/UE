@@ -56,7 +56,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None,
 
         if now - start_time_lst >= max_run_time:
             plots_utils_v1.plot_vehicle_relative_path(current_vehicle_positions_lst, moving_car_name)
-            return current_vehicle_positions_lst
+            return current_object_positions_lst
 
         curr_heading = np.deg2rad(curr_rot[0])
 
@@ -99,7 +99,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None,
 
     plots_utils_v1.plot_vehicle_relative_path(current_vehicle_positions_lst, moving_car_name)
     plots_utils_v1.combine_plot(spline_obj.xi, spline_obj.yi, current_vehicle_positions_lst, moving_car_name)
-    return current_vehicle_positions_lst
+    return current_object_positions_lst
 
 
 def set_car_controls_by_name(airsim_client, car_name, desired_steer, throttle=0.4):
