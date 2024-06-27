@@ -1,7 +1,7 @@
 {
   "SettingsVersion": 1.2,
   "SimMode": "Car",
-  "ClockSpeed": 3.0,
+  "ClockSpeed": 5.0,
   "LocalHostIp": "127.0.0.1",
   "RpcEnabled": true,
   "SpeedUnitLabel": "m/s",

@@ -1,7 +1,9 @@
 import os.path
 import matplotlib.pyplot as plt
+from sklearn.cluster import DBSCAN
+
 from utils.perception import dbscan_utils
-from utils.perception.car_detection_experiments_helper import *
+from utils.perception.car_detection_experiments_helper_v1 import *
 from utils.perception.dbscan_utils import *
 
 yaw_mapping = {0: '^', 90: '>', 180: 'v', 270: '<'}
@@ -64,7 +66,7 @@ def car_detection(airsim_client, points_cloud, lidar_to_map, execution_time, vel
     other_car_position = other_car_pos_and_orientation.position
     other_car_position_as_np_array = np.array(
         [other_car_position.x_val, other_car_position.y_val, other_car_position.z_val])
-    other_car_position_eng, _ = spatial_utils.convert_eng_airsim(other_car_position_as_np_array, [0, 0, 0])
+    other_car_position_eng, _ = spatial_utils_v1.convert_eng_airsim(other_car_position_as_np_array, [0, 0, 0])
     other_car_true_pos_eng = other_car_position_eng
     # region Keep In Mind
     # we will keep this to remember this is another way to get the correct position of car2:

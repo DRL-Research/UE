@@ -1,4 +1,3 @@
-import math
 from scipy.spatial.transform import Rotation
 import numpy as np
 
@@ -46,14 +45,14 @@ def camera_to_eng(pos):
     return new_pos
 
 
-def set_airsim_pose(airsim_client, desired_position, desired_rot, inherit_z=True, moving_car_name='Car1'):
+def set_airsim_pose(airsim_client, desired_position, desired_rot, inherit_z=True):
     # Input is in ENG coordinate system!
     # Both desired position and rotation must have 3 elements: [x,y,z] and [yaw,pitch,roll].
     # Converts to Airsim and sends to client.
 
     desired_position = np.array(desired_position)  # To accept lists as well.
     desired_rot = np.array(desired_rot)  # To accept lists as well.
-    initial_pose = airsim_client.simGetVehiclePose(vehicle_name=moving_car_name)
+    initial_pose = airsim_client.simGetVehiclePose()
 
     if inherit_z:
         desired_position = np.append(desired_position, -initial_pose.position.z_val)
@@ -73,7 +72,7 @@ def set_airsim_pose(airsim_client, desired_position, desired_rot, inherit_z=True
     initial_pose.position.z_val = pos[2]
 
     # Send results to client:
-    airsim_client.simSetVehiclePose(initial_pose, ignore_collision=True, vehicle_name=moving_car_name)
+    airsim_client.simSetVehiclePose(initial_pose, ignore_collision=True)
 
 
 def extract_rotation_from_airsim(orientation):
@@ -127,61 +126,7 @@ def tf_matrix_from_airsim_object(actor_pose):
     position = np.array([actor_pose.position.x_val, actor_pose.position.y_val, actor_pose.position.z_val])
     yaw_pitch_roll = extract_rotation_from_airsim(actor_pose.orientation)
     pos, rot = convert_eng_airsim(position, yaw_pitch_roll)
-    # NOTE - for a car in yaw = 180, a user should uncomment the next line.
-    # rot = np.array([0, 0, 0])
     return tf_matrix_from_eng_pose(pos, rot)
-
-
-##########################################################################################################
-
-def get_car_settings_position(client, car_name):
-    return client.simGetObjectPose(car_name).position
-
-def calculate_distance_in_2d_from_3dvector(position1, position2):
-    """
-    Calculate the Euclidean distance between two points in 2D or 3D space.
-
-    Parameters:
-    position1 (list or 3dVector): The first position. If is_array is True, it should be a list or array of (x, y, z) coordinates.
-    position2 (list or 3dVector): The second position. If is_array is True, it should be a list or array of (x, y, z) coordinates.
-    is_array (bool): If True, position1 and position2 are assumed to be lists or arrays of coordinates. Otherwise, they are objects with x_val, y_val, z_val
-
-    Returns:
-    float: The Euclidean distance between position1 and position2.
-    """
-    distance = math.sqrt((position1.x_val - position2.x_val) ** 2 +
-                                           (position1.y_val - position2.y_val) ** 2)
-    # position1 = [position1.x_val, position1.y_val]
-    # position2 = [position2.x_val, position2.y_val]
-    # position1 = np.array(position1)
-    # position2 = np.array(position2)
-    # distance = np.linalg.norm(position1 - position2)
-
-    return distance
-def calculate_distance_in_2d_from_array(position1, position2):
-    """
-    Calculate the Euclidean distance between two points in 2D or 3D space.
-
-    Parameters:
-    position1 (list or 3dVector): The first position. If is_array is True, it should be a list or array of (x, y, z) coordinates.
-    position2 (list or 3dVector): The second position. If is_array is True, it should be a list or array of (x, y, z) coordinates.
-    is_array (bool): If True, position1 and position2 are assumed to be lists or arrays of coordinates. Otherwise, they are objects with x_val, y_val, z_val
-
-    Returns:
-    float: The Euclidean distance between position1 and position2.
-    """
-    # if len(position1) != 2:
-    #     position1 = [position1[0], position1[1]]
-    # if len(position2) != 2:
-    #     position2 = [position2[0], position2[1]]
-    # position1 = np.array(position1)
-    # position2 = np.array(position2)
-    # distance = np.linalg.norm(position1 - position2)
-    distance = math.sqrt((position1[0] - position2[0]) ** 2 +
-                                           (position1[1] - position2[1]) ** 2)
-    return distance
-
-##########################################################################################################
 
 
 if __name__ == "__main__":

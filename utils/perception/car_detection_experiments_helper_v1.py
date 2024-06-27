@@ -1,11 +1,8 @@
 import os
-
-import airsim.utils
 import numpy as np
 import pandas as pd
 from scipy.spatial.transform import Rotation
-from sklearn.cluster import DBSCAN
-import spatial_utils
+import spatial_utils_v1
 
 
 # region Geo & Coordinates
@@ -41,7 +38,7 @@ def get_yaw_by_orientation(orientation):
 
 def convert_airsim_point_to_global_point_using_lidar2map_tf(airsim_point, lidar_to_map, execution_time, curr_vel):
     # convert airsim -> ENG
-    eng_point, dump = spatial_utils.convert_eng_airsim(airsim_point, [0, 0, 0])
+    eng_point, dump = spatial_utils_v1.convert_eng_airsim(airsim_point, [0, 0, 0])
     eng_point[0] -= execution_time * curr_vel * 2.0  # Compensate for sensor sync
     lidar_point = np.append(eng_point, 1) # add one for matmul
     point_global = np.matmul(lidar_to_map, lidar_point)[:3] # from [k,m,n,1] get the k,m,n

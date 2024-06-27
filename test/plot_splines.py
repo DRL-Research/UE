@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from path_planning.spline_utils import PathSpline
+from path_planning.spline_utils_v0 import PathSpline
 
 # with open('car_data.pickle', 'rb') as handle:
 #     car_data = pickle.load(handle)

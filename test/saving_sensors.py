@@ -3,7 +3,7 @@ import numpy as np
 import airsim
 import time
 import pickle
-from spatial_utils import set_initial_pose
+from spatial_utils_v1 import set_initial_pose
 import csv
 
 

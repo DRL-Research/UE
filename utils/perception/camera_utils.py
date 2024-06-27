@@ -1,6 +1,6 @@
-import numpy as np
-import spatial_utils
 import cv2
+import numpy as np
+import spatial_utils_v1
 
 
 class AirsimCamera:
@@ -15,7 +15,7 @@ class AirsimCamera:
         self.HEIGHT_DIST_COEFF = 100
         self.intrinsic_matrix = self.generate_intrinsics(cam_width, cam_height, cam_fov)
         # Transformation matrix is calculated in ENG coordinate system!
-        self.tf_matrix = spatial_utils.tf_matrix_from_airsim_pose(cam_pos, cam_rot)
+        self.tf_matrix = spatial_utils_v1.tf_matrix_from_airsim_pose(cam_pos, cam_rot)
 
     @staticmethod
     def generate_intrinsics(width, height, horizontal_fov):
@@ -29,7 +29,7 @@ class AirsimCamera:
         return cam_intrinsics
 
     def project_vector_to_pixel(self, vector):
-        cam_coordinates = spatial_utils.eng_to_camera(np.array(vector))
+        cam_coordinates = spatial_utils_v1.eng_to_camera(np.array(vector))
         distance = np.linalg.norm(cam_coordinates)
         normalized_vector = cam_coordinates / cam_coordinates[2]
         pixel_space = np.matmul(self.intrinsic_matrix, normalized_vector)

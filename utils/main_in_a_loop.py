@@ -1,14 +1,14 @@
-from perception import cone_mapping
-import airsim
-from path_planning import path_control, spline_utils, path_following
+import csv
 import os
 import pickle
-import csv
+import airsim
+from path_planning import path_control_v0, spline_utils_v0, path_following_v0
+from perception import cone_mapping
 
 if __name__ == '__main__':
 
     # Create an airsim client instance:
-    steering_procedure_manager = path_control.SteeringProcManager()
+    steering_procedure_manager = path_control_v0.SteeringProcManager()
     airsim_client = airsim.CarClient()
     airsim_client.confirmConnection()
     airsim_client.enableApiControl(True)
@@ -35,14 +35,14 @@ if __name__ == '__main__':
         print('pickle saved')
 
         # Arrange the points and generate a path spline:
-        track_points = spline_utils.generate_path_points(mapping_data)
-        spline_obj = spline_utils.PathSpline(track_points[::2, 0], track_points[::2, 1])
+        track_points = spline_utils_v0.generate_path_points(mapping_data)
+        spline_obj = spline_utils_v0.PathSpline(track_points[::2, 0], track_points[::2, 1])
         spline_obj.generate_spline(amount=0.1, meters=True, smoothing=1)
         print('Done!')
 
         # Follow the spline using Stanley's method:
         print('Starting variable speed spline following procedure.')
-        pickling_objects, car_data = path_following.following_loop(airsim_client, spline_obj, moving_car_name=m)
+        pickling_objects, car_data = path_following_v0.following_loop(airsim_client, spline_obj)
         print('Full process complete! stopping vehicle.')
 
         # Done! stop vehicle:

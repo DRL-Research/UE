@@ -3,9 +3,9 @@ import time
 import pickle
 from sklearn.cluster import DBSCAN
 import airsim
-import spatial_utils
+import spatial_utils_v1
 from perception import camera_utils, dbscan_utils, tracker_utils
-from path_planning import path_control
+from path_planning import path_control_v1
 import os
 import cv2
 

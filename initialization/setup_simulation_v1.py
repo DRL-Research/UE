@@ -1,6 +1,6 @@
 from typing import NamedTuple, Dict
 import airsim
-from initialization.config import *
+from initialization.config_v1 import *
 
 
 class Car(NamedTuple):

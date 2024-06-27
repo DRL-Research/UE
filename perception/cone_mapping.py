@@ -1,11 +1,13 @@
 import pickle
 from datetime import time
+from sklearn.cluster import DBSCAN
 from perception import camera_utils, tracker_utils
-from utils.path_planning import path_control
+from utils.path_planning import path_control_v0
 import cv2
 import struct
-from perception.car_mapping import *
-from initialization.setup_simulation import *
+from perception.car_mapping_v1 import *
+from initialization.setup_simulation_v1 import *
+from utils import spatial_utils_v0
 
 decimation = 30e9  # Used to save an output image every X iterations.
 
@@ -51,18 +53,18 @@ def mapping_loop(client, setup_manager: SetupManager):
     lidar_rot = [0, 0, 0]
     left_cam = camera_utils.AirsimCamera(640, 360, 70, [2, -0.5, -0.5], [-40.0, -10.0, 0])
     right_cam = camera_utils.AirsimCamera(640, 360, 70, [2, 0.5, -0.5], [40.0, -10.0, 0])
-    lidar_to_vehicle = spatial_utils.tf_matrix_from_airsim_pose(lidar_pos, lidar_rot)
+    lidar_to_vehicle = spatial_utils_v1.tf_matrix_from_airsim_pose(lidar_pos, lidar_rot)
     left_cam_to_vehicle = left_cam.tf_matrix
     right_cam_to_vehicle = right_cam.tf_matrix
     lidar_to_left_cam = np.matmul(np.linalg.inv(left_cam_to_vehicle), lidar_to_vehicle)
     lidar_to_right_cam = np.matmul(np.linalg.inv(right_cam_to_vehicle), lidar_to_vehicle)
 
     # Define pure pursuit parameters
-    pursuit_follower = path_control.PursuitFollower(2.0, 6.0)
+    pursuit_follower = path_control_v0.PursuitFollower(2.0, 6.0)
     pursuit_follower.k_steer = 0.5
 
     # Open access to shared memory blocks:
-    shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
+    shmem_active, shmem_setpoint, shmem_output = path_control_v0.SteeringProcManager.retrieve_shared_memories()
 
     # Initialize vehicle starting point
     # before:  spatial_utils.set_airsim_pose(client, [0.0, 0.0], [90.0, 0, 0])
@@ -90,7 +92,7 @@ def mapping_loop(client, setup_manager: SetupManager):
         if delta_time > sample_time:
             last_iteration = time.perf_counter()
             vehicle_pose = client.simGetVehiclePose()
-            vehicle_to_map = spatial_utils.tf_matrix_from_airsim_object(vehicle_pose)
+            vehicle_to_map = spatial_utils_v0.tf_matrix_from_airsim_object(vehicle_pose)
             map_to_vehicle = np.linalg.inv(vehicle_to_map)
             lidar_to_map = np.matmul(vehicle_to_map, lidar_to_vehicle)
             car_state = client.getCarState()
@@ -139,7 +141,7 @@ def mapping_loop(client, setup_manager: SetupManager):
 
                 # Go through the DBSCAN centroids of the current frame:
                 for centroid_airsim in curr_centroids:
-                    centroid_eng, dump = spatial_utils.convert_eng_airsim(centroid_airsim, [0, 0, 0])
+                    centroid_eng, dump = spatial_utils_v0.convert_eng_airsim(centroid_airsim, [0, 0, 0])
                     centroid_eng[0] -= execution_time * curr_vel * 2.0  # Compensate for sensor sync
                     centroid_lidar = np.append(centroid_eng, 1)
                     centroid_global = np.matmul(lidar_to_map, centroid_lidar)[:3]
@@ -210,7 +212,7 @@ if __name__ == '__main__':
     airsim_client.confirmConnection()
     airsim_client.enableApiControl(True)
 
-    steering_procedure_manager = path_control.SteeringProcManager()
+    steering_procedure_manager = path_control_v0.SteeringProcManager()
     dump = mapping_loop(airsim_client)
 
     # Done! stop vehicle:

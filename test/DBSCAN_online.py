@@ -5,7 +5,7 @@ import pickle
 from sklearn.cluster import DBSCAN
 import airsim
 from perception import dbscan_utils
-from spatial_utils import set_initial_pose
+from spatial_utils_v1 import set_initial_pose
 
 
 def aggregate_detections(airsim_client, iterations=2):

@@ -3,12 +3,12 @@ import os
 import random
 import threading
 import time
-from initialization.config import *
-import plots_utils
-from initialization.setup_simulation import SetupManager
-from path_planning import  turn_mapping, path_following
-from utils.path_planning import path_control, turn_helper
-from airsim_manager import AirsimManager
+from initialization.config_v1 import *
+import plots_utils_v1
+from initialization.setup_simulation_v1 import SetupManager
+from path_planning import  turn_mapping_v1, path_following_v1
+from utils.path_planning import path_control_v1, turn_helper_v1
+from airsim_manager_v1 import AirsimManager
 
 
 # Function to initialize setup and return airsim_client
@@ -27,16 +27,16 @@ def run_for_single_car(moving_car_name):
     airsim_client, airsim_manager = initialize_setup()
 
     # Ensure SteeringProcManager initialization
-    path_control.SteeringProcManager.create_steering_procedure()  # Initialize shared memory
+    path_control_v1.SteeringProcManager.create_steering_procedure()  # Initialize shared memory
 
     try:
         # Use retrieved shared memories
-        shmem_active, shmem_setpoint, shmem_output = path_control.SteeringProcManager.retrieve_shared_memories()
+        shmem_active, shmem_setpoint, shmem_output = path_control_v1.SteeringProcManager.retrieve_shared_memories()
         directions = [TURN_DIRECTION_STRAIGHT, TURN_DIRECTION_RIGHT, TURN_DIRECTION_LEFT]
         direction = random.choices(directions, k=1)[0]
         # Detect the cones and spline points, and return their location:
         print(f'Starting on-the-fly cone mapping with constant speed and steering procedure for {moving_car_name}.')
-        tracked_points, execution_time, curr_vel, transition_matrix = turn_mapping.mapping_loop(airsim_client,
+        tracked_points, execution_time, curr_vel, transition_matrix = turn_mapping_v1.mapping_loop(airsim_client,
                                                                                                 moving_car_name,
                                                                                                 direction)
 
@@ -48,11 +48,11 @@ def run_for_single_car(moving_car_name):
         car_controls.throttle = 0.0
         airsim_client.setCarControls(car_controls, vehicle_name=moving_car_name)
 
-        spline_obj = turn_helper.filter_tracked_points_and_generate_spline(tracked_points, moving_car_name)
+        spline_obj = turn_helper_v1.filter_tracked_points_and_generate_spline(tracked_points, moving_car_name)
 
         # Follow the spline using Stanley's method:
         print(f'Starting variable speed spline following procedure for {moving_car_name}.')
-        positions_lst = path_following.following_loop(airsim_client, spline_obj, execution_time, curr_vel, transition_matrix, moving_car_name=moving_car_name)
+        positions_lst = path_following_v1.following_loop(airsim_client, spline_obj, execution_time, curr_vel, transition_matrix, moving_car_name=moving_car_name)
 
         print(f'Full process complete for {moving_car_name}! Stopping vehicle.')
         car_controls.throttle = 0.0
@@ -65,6 +65,7 @@ def run_for_single_car(moving_car_name):
         # path_control.SteeringProcManager.detach_shared_memories() #todo: if its not comment it fucks up the program
         # path_control.SteeringProcManager.terminate_steering_procedure()
         return positions_lst
+
 
 if __name__ == '__main__':
     print("ID of process running main program: {}".format(os.getpid()))
@@ -86,7 +87,7 @@ if __name__ == '__main__':
 
     ## here i want to append the positions_lst that return from run_for_car of each procces to the all_cars_positions_list
     x=all_cars_positions_list
-    plots_utils.plot_vehicle_object_path(all_cars_positions_list)
+    plots_utils_v1.plot_vehicle_object_path(all_cars_positions_list)
 
     print('All cars have completed their tasks.')
 

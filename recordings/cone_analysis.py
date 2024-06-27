@@ -2,7 +2,7 @@ import numpy as np
 import pickle
 import csv
 from perception import tracker_utils
-from path_planning import spline_utils
+from path_planning import spline_utils_v0
 import os
 
 COLOR_UNKNOWN = tracker_utils.ConeTracker.COLOR_UNKNOWN
@@ -100,7 +100,7 @@ if single_run:
     track_points = (blue_points[:min_length, :] + yellow_points[:min_length, :]) / 2
     # raw_spline = spline_utils.PathSpline(track_points[:, 0], track_points[:, 1])
     # raw_spline.generate_spline(amount=0.1, meters=True, smoothing=0)
-    smoothed_spline = spline_utils.PathSpline(track_points[::2, 0], track_points[::2, 1])
+    smoothed_spline = spline_utils_v0.PathSpline(track_points[::2, 0], track_points[::2, 1])
     smoothed_spline.generate_spline(amount=0.1, meters=True, smoothing=1)
 
     detected_cones = np.append(blue_points[:min_length, :], yellow_points[:min_length, :], axis=1)

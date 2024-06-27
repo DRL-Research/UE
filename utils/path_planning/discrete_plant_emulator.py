@@ -1,11 +1,11 @@
+import csv
+import multiprocessing
+import struct
+import time
+from multiprocessing import shared_memory
 import numpy as np
 from matplotlib import pyplot as plt
 from path_planning.pidf_controller import PidfControl
-import time
-import csv
-import multiprocessing
-from multiprocessing import shared_memory
-import struct
 
 
 class DiscretePlant:

@@ -2,7 +2,7 @@ import numpy as np
 import pickle
 from matplotlib import pyplot as plt
 from perception import tracker_utils
-from path_planning import spline_utils
+from path_planning import spline_utils_v0
 
 with open('tracker_session.pickle', 'rb') as handle:
     tracker_data = pickle.load(handle)
@@ -45,7 +45,7 @@ for tracked_obj in tracker_data['pursuit']:
 min_length = min(left_points.shape[0], right_points.shape[0])
 track_points = (left_points[:min_length, :] + right_points[:min_length, :]) / 2
 
-my_spline = spline_utils.PathSpline(track_points[::2, 0], track_points[::2, 1])
+my_spline = spline_utils_v0.PathSpline(track_points[::2, 0], track_points[::2, 1])
 my_spline.generate_spline(amount=0.1, meters=True, smoothing=1)
 
 fig, ax = plt.subplots(1, 1)

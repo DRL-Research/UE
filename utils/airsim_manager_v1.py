@@ -1,4 +1,4 @@
-from initialization.setup_simulation import *
+from initialization.setup_simulation_v1 import *
 
 
 class AirsimManager:
