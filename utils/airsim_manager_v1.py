@@ -77,7 +77,8 @@ class AirsimManager:
     def stop_car(self, moving_car_name, throttle=0.0):
         car_controls = airsim.CarControls()
         car_controls.throttle = throttle
-        car_controls.brake = 1.0
+        if throttle > 0:
+            car_controls.brake = 1.0
         self.airsim_client.setCarControls(car_controls, vehicle_name=moving_car_name)
 
     def collision_occurred(self):
