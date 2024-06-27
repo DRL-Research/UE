@@ -11,6 +11,15 @@ class Car(NamedTuple):
     destination: dict
     is_active: bool
 
+    def get_start_location_x(self, offset):
+        return self.initial_position[0] - offset
+
+    def get_start_location_y(self, offset, side=None):
+        if side is None:
+            return self.initial_position[1] - offset
+        else:
+            return side * self.initial_position[1] - offset
+
 
 class CarDict(Dict[str, Car]):
     pass
@@ -21,8 +30,8 @@ class SetupManager:
         self.n_active_cars = NUMBER_OF_CAR_IN_SIMULATION
         self.cars = CarDict()
         self.airsim_client = airsim.CarClient()
-        self.airsim_client.confirmConnection()
         self.max_cars_we_can_handle = 4
+        self.extract_cars()
 
     def extract_cars(self):
         active = [True] * self.n_active_cars
@@ -40,13 +49,3 @@ class SetupManager:
         cars = [car1, car2, car3, car4]
         for car in cars:
             self.cars[car.name] = car
-
-    def enableApiCarsControl(self):
-        for car_id, car_object in self.cars.items():
-            if not self.airsim_client.isApiControlEnabled(car_object.name):
-                self.airsim_client.enableApiControl(is_enabled=True, vehicle_name=car_object.name)
-
-    def set_car_throttle_by_name(self, car_name, throttle=0.4):
-        car_controls = airsim.CarControls()
-        car_controls.throttle = throttle
-        self.airsim_client.setCarControls(car_controls, car_name)
