@@ -44,21 +44,17 @@ class AirsimManager:
 
     def reset_cars_to_initial_positions(self):
         self.airsim_client.reset()
-        # pick at random (car 2 goes from left/right)
-        left_or_right = [-1, 1]
 
         car1_start_location_x, car1_start_location_y = self.get_start_location(CAR1_NAME)
 
         # -24, 6
-        car2_side = left_or_right[0] if CAR2_SIDE == 'left' else left_or_right[1]
-        car2_start_location_x, car2_start_location_y = self.get_start_location(CAR2_NAME, car2_side)
+        car2_start_location_x, car2_start_location_y = self.get_start_location(CAR2_NAME, 1)
 
         # -6, -24
         car3_start_location_x, car3_start_location_y = self.get_start_location(CAR3_NAME)
 
         # 24, -6
-        car4_side = left_or_right[0] if CAR4_SIDE == 'left' else left_or_right[1]
-        car4_start_location_x, car4_start_location_y = self.get_start_location(CAR4_NAME, car4_side)
+        car4_start_location_x, car4_start_location_y = self.get_start_location(CAR4_NAME, -1)
 
         # Set the reference_position for Car1 and Car2 (Do not change this code)
         reference_position = airsim.Pose(airsim.Vector3r(0.0, 0, -1), airsim.Quaternionr(0, 0.0, 0.0, 1.0))
