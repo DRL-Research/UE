@@ -6,7 +6,8 @@ from utils.path_planning import spline_utils_v1
 
 
 def airsim_point_to_global_full_version(airsim_point, execution_time, curr_vel, transition_matrix):
-    # todo: explain why we didnt use it and save for later use
+    # we didnt use this function since the transition matrix is crucial for the transformations.
+    # in case of 4 cars, each has its own matrix.
     airsim_point_copy = airsim_point.copy()
     centroid_eng, dump = spatial_utils_v1.convert_eng_airsim(airsim_point_copy, [0, 0, 0])
     centroid_eng[0] -= execution_time * curr_vel * 2.0  # Compensate for sensor sync

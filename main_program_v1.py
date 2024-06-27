@@ -44,7 +44,7 @@ def run_for_single_car(moving_car_name):
 
         # Stop until spline generation is complete:
         print(f'Stopping vehicle {moving_car_name} and generating a path to follow...')
-        #airsim_manager.stop_car(moving_car_name, 0.02)
+        airsim_manager.stop_car(moving_car_name, 0.1)
 
         spline = turn_helper_v1.filter_tracked_points_and_generate_spline(tracked_points, moving_car_name)
 

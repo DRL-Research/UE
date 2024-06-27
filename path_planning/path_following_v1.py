@@ -10,7 +10,7 @@ import os
 from initialization.config_v1 import *
 
 
-def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None,
+def following_loop(client, spline=None, execution_time=None, curr_vel=None,
                    transition_matrix=None, moving_car_name="Car1"):
     data_dest = os.path.join(os.getcwd(), '../recordings')
     os.makedirs(data_dest, exist_ok=True)
@@ -35,7 +35,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None,
     start_time_lst = time.perf_counter()
     max_run_time = 60
     turn_completed = False
-    target_point = [spline_obj.xi[-1], spline_obj.yi[-1]]
+    target_point = [spline.xi[-1], spline.yi[-1]]
 
     while not turn_completed:
         now = time.perf_counter()
@@ -98,7 +98,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None,
         set_car_controls_by_name(client, moving_car_name, desired_steer)
 
     plots_utils_v1.plot_vehicle_relative_path(current_vehicle_positions_lst, moving_car_name)
-    plots_utils_v1.combine_plot(spline_obj.xi, spline_obj.yi, current_vehicle_positions_lst, moving_car_name)
+    plots_utils_v1.combine_plot(spline.xi, spline.yi, current_vehicle_positions_lst, moving_car_name)
     return current_object_positions_lst
 
 
@@ -108,23 +108,3 @@ def set_car_controls_by_name(airsim_client, car_name, desired_steer, throttle=0.
     car_controls.steering = desired_steer
     airsim_client.setCarControls(car_controls, car_name)
 
-
-def create_spline_object_manually(client):
-    starting_x = 12.1
-    starting_y = 18.7
-    spline_origin_x = 12
-    spline_origin_y = 25
-    x_offset = spline_origin_x - starting_x
-    y_offset = spline_origin_y - starting_y
-
-    x = np.array([-2.00, 0.00, 0.00, 0.00, -5.00, -13.0, -21.0, -27.0, -32.0, -38.0, -47.0, -55.0, -53.0, -40.0, -25.0,
-                  -23.0, -37.0, -34.0, -20.0, -8.0])
-    y = np.array([6.0, -7.0, -19.0, -34.0, -46.0, -51.0, -54.0, -59.0, -68.0, -74.0, -75.0, -68.0, -54.0, -39.0, -23.0,
-                  -8.00, 6.00, 21.00, 23.00, 15.00])
-    x += x_offset
-    y += y_offset
-    y *= -1
-    spline_obj = PathSpline(x, y)
-    spline_obj.generate_spline(0.1, smoothing=1)
-    spatial_utils_v1.set_airsim_pose(client, [0.0, 0.0], [90.0, 0, 0])
-    return spline_obj
