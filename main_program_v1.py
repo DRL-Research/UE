@@ -41,9 +41,7 @@ def run_for_single_car(moving_car_name):
 
         # Stop until spline generation is complete:
         print(f'Stopping vehicle {moving_car_name} and generating a path to follow...')
-        car_controls = airsim_manager.airsim_client.getCarControls(vehicle_name=moving_car_name)
-        car_controls.throttle = 0.0
-        airsim_manager.airsim_client.setCarControls(car_controls, vehicle_name=moving_car_name)
+        #airsim_manager.stop_car(moving_car_name, 0.02)
 
         spline = turn_helper_v1.filter_tracked_points_and_generate_spline(tracked_points, moving_car_name)
 
@@ -67,7 +65,7 @@ if __name__ == '__main__':
     print("Main thread name: {}".format(threading.current_thread().name))
 
     # Define the car names
-    moving_car_names = [CAR1_NAME, CAR2_NAME, CAR3_NAME, CAR4_NAME]  # Add more car names as needed
+    moving_car_names = [CAR2_NAME, CAR3_NAME, CAR4_NAME]  # Add more car names as needed
     all_cars_positions_list = []
 
     # Create a process pool

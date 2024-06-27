@@ -37,7 +37,7 @@ class AirsimManager:
     def get_start_location(self, car_name, side=None):
         car = self.cars[car_name]
         car_offset_x = self.car_name_to_offset[car_name]['x_offset']
-        car_offset_y = self.car_name_to_offset[CAR1_NAME]['y_offset']
+        car_offset_y = self.car_name_to_offset[car_name]['y_offset']
         car_start_location_x = car.get_start_location_x(car_offset_x)
         car_start_location_y = car.get_start_location_y(car_offset_y, side)
         return car_start_location_x, car_start_location_y
@@ -78,9 +78,9 @@ class AirsimManager:
         self.set_initial_position_and_yaw(car_name=CAR4_NAME, start_location_x=car4_start_location_x,
                                           start_location_y=car4_start_location_y, car_start_yaw=CAR4_INITIAL_YAW)
 
-    def stop_car(self, moving_car_name):
+    def stop_car(self, moving_car_name, throttle=0.0):
         car_controls = airsim.CarControls()
-        car_controls.throttle = 0.0
+        car_controls.throttle = throttle
         car_controls.brake = 1.0
         self.airsim_client.setCarControls(car_controls, vehicle_name=moving_car_name)
 
