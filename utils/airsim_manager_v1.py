@@ -1,75 +1,88 @@
-from initialization.setup_simulation_v1 import *
+from initialization.config_v1 import *
+import airsim
+from initialization.setup_simulation_v1 import CarDict
 
 
 class AirsimManager:
 
-    def __init__(self, airsim_client, setup_manager: SetupManager):
-
+    def __init__(self, airsim_client, cars: CarDict):
         self.airsim_client = airsim_client
         self.airsim_client.confirmConnection()  # Confirm the connection to the AirSim simulator
         self.car_name_to_offset = {}
-        self.setup_manager = setup_manager
+        self.cars = cars
+        self.enable_api_cars_control()
 
         # Set cars throttle to 1:
-        for car_name, car_obj in self.setup_manager.cars.items():
+        for car_obj in self.cars.values():
             if car_obj.is_active:
-                self.setup_manager.set_car_throttle_by_name(car_name)  # default throttle is 1
+                self.set_car_throttle_by_name(car_obj.name)  # default throttle is 1
             # get initial positions according to settings offset
             # (later be used whenever we need to reset to initial position -> start of each epoch)
             # (arbitrary starting position in settings file as long as they are not spawned on top of each other)
-            car_pos = self.airsim_client.simGetObjectPose(car_name).position
-            self.car_name_to_offset[car_name] = {'x_offset': car_pos.x_val, 'y_offset': car_pos.y_val}
+            car_pos = self.airsim_client.simGetObjectPose(car_obj.name).position
+            self.car_name_to_offset[car_obj.name] = {'x_offset': car_pos.x_val, 'y_offset': car_pos.y_val}
 
         self.reset_cars_to_initial_positions()
+
+    def set_car_throttle_by_name(self, car_name, throttle=0.4):
+        car_controls = airsim.CarControls()
+        car_controls.throttle = throttle
+        self.airsim_client.setCarControls(car_controls, car_name)
+
+    def enable_api_cars_control(self):
+        for car in self.cars.values():
+            if not self.airsim_client.isApiControlEnabled(car.name):
+                self.airsim_client.enableApiControl(is_enabled=True, vehicle_name=car.name)
+
+    def get_start_location(self, car_name, side=None):
+        car = self.cars[car_name]
+        car_offset_x = self.car_name_to_offset[car_name]['x_offset']
+        car_offset_y = self.car_name_to_offset[CAR1_NAME]['y_offset']
+        car_start_location_x = car.get_start_location_x(car_offset_x)
+        car_start_location_y = car.get_start_location_y(car_offset_y, side)
+        return car_start_location_x, car_start_location_y
 
     def reset_cars_to_initial_positions(self):
         self.airsim_client.reset()
         # pick at random (car 2 goes from left/right)
-        left_or_right = [-1, 1]  # random.choice([1, -1])
+        left_or_right = [-1, 1]
 
-        car1_start_location_x = CAR1_INITIAL_POSITION[0] - self.car_name_to_offset[CAR1_NAME]['x_offset']  # 6 - 0
-        car1_start_location_y = CAR1_INITIAL_POSITION[1] - self.car_name_to_offset[CAR1_NAME]['y_offset']  # 24 - 0
+        car1_start_location_x, car1_start_location_y = self.get_start_location(CAR1_NAME)
 
         # -24, 6
-        car2_start_location_x = CAR2_INITIAL_POSITION[0] - self.car_name_to_offset[CAR2_NAME]['x_offset']  # -19 - 5
         car2_side = left_or_right[0] if CAR2_SIDE == 'left' else left_or_right[1]
-        car2_start_location_y = car2_side * CAR2_INITIAL_POSITION[1] - self.car_name_to_offset[CAR2_NAME]['y_offset']  # 1 + 5
+        car2_start_location_x, car2_start_location_y = self.get_start_location(CAR2_NAME, car2_side)
 
         # -6, -24
-        car3_start_location_x = CAR3_INITIAL_POSITION[0] - self.car_name_to_offset[CAR3_NAME]['x_offset']  # 4 - 10
-        car3_start_location_y = CAR3_INITIAL_POSITION[1] - self.car_name_to_offset[CAR3_NAME]['y_offset']  # -24 - 0
+        car3_start_location_x, car3_start_location_y = self.get_start_location(CAR3_NAME)
 
         # 24, -6
-        car4_start_location_x = CAR4_INITIAL_POSITION[0] - self.car_name_to_offset[CAR4_NAME]['x_offset']  # 29 - 5
         car4_side = left_or_right[0] if CAR4_SIDE == 'left' else left_or_right[1]
-        car4_start_location_y = car4_side * CAR4_INITIAL_POSITION[1] - self.car_name_to_offset[CAR4_NAME]['y_offset'] # -1 - 5
-
-        car1_start_yaw = CAR1_INITIAL_YAW
-        car2_start_yaw = CAR2_INITIAL_YAW
-        car3_start_yaw = CAR3_INITIAL_YAW
-        car4_start_yaw = CAR4_INITIAL_YAW
+        car4_start_location_x, car4_start_location_y = self.get_start_location(CAR4_NAME, car4_side)
 
         # Set the reference_position for Car1 and Car2 (Do not change this code)
         reference_position = airsim.Pose(airsim.Vector3r(0.0, 0, -1), airsim.Quaternionr(0, 0.0, 0.0, 1.0))
-        for car_name in self.setup_manager.cars:
+        for car_name in self.cars:
             self.airsim_client.simSetVehiclePose(reference_position, True, car_name)
 
         # Set initial position and yaw of Car1
         self.set_initial_position_and_yaw(car_name=CAR1_NAME, start_location_x=car1_start_location_x,
-                                          start_location_y=car1_start_location_y, car_start_yaw=car1_start_yaw)
+                                          start_location_y=car1_start_location_y, car_start_yaw=CAR1_INITIAL_YAW)
         # Set initial position and yaw of Car2
         self.set_initial_position_and_yaw(car_name=CAR2_NAME, start_location_x=car2_start_location_x,
-                                          start_location_y=car2_start_location_y, car_start_yaw=car2_start_yaw)
+                                          start_location_y=car2_start_location_y, car_start_yaw=CAR2_INITIAL_YAW)
         # Set initial position and yaw of Car3
         self.set_initial_position_and_yaw(car_name=CAR3_NAME, start_location_x=car3_start_location_x,
-                                          start_location_y=car3_start_location_y, car_start_yaw=car3_start_yaw)
+                                          start_location_y=car3_start_location_y, car_start_yaw=CAR3_INITIAL_YAW)
         # Set initial position and yaw of Car4
         self.set_initial_position_and_yaw(car_name=CAR4_NAME, start_location_x=car4_start_location_x,
-                                          start_location_y=car4_start_location_y, car_start_yaw=car4_start_yaw)
+                                          start_location_y=car4_start_location_y, car_start_yaw=CAR4_INITIAL_YAW)
 
-        # for car_name, car_obj in self.setup_manager.cars.items():
-        #     if car_obj.is_active:
-        #         self.setup_manager.set_car_throttle_by_name(car_name)
+    def stop_car(self, moving_car_name):
+        car_controls = airsim.CarControls()
+        car_controls.throttle = 0.0
+        car_controls.brake = 1.0
+        self.airsim_client.setCarControls(car_controls, vehicle_name=moving_car_name)
 
     def collision_occurred(self):
         collision_info = self.airsim_client.simGetCollisionInfo()

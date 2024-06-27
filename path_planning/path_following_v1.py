@@ -10,24 +10,18 @@ import os
 from initialization.config_v1 import *
 
 
-def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, transition_matrix=None, moving_car_name="Car1"):
+def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None,
+                   transition_matrix=None, moving_car_name="Car1"):
     data_dest = os.path.join(os.getcwd(), '../recordings')
     os.makedirs(data_dest, exist_ok=True)
     save_data = False
-
-    if spline_obj is None:
-        spline_obj = create_spline_object_manually(client)
 
     # Open access to shared memory blocks:
     shmem_active, shmem_setpoint, shmem_output = path_control_v1.SteeringProcManager.retrieve_shared_memories()
 
     # Define Stanley-method parameters:
-    follow_handler = path_control_v1.StanleyFollower(spline_obj)
+    follow_handler = path_control_v1.StanleyFollower(spline_obj, MAX_VELOCITY, MIN_VELOCITY, LOOKAHEAD, K_STEER)
     follow_handler.k_vel *= K_VEL
-    follow_handler.max_velocity = MAX_VELOCITY  # m/s
-    follow_handler.min_velocity = MIN_VELOCITY  # m/s
-    follow_handler.lookahead = LOOKAHEAD  # meters
-    follow_handler.k_steer = K_STEER  # Stanley steering coefficient
 
     # Define speed controller:
     speed_controller = PidfControl(0.01)
@@ -35,16 +29,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
     speed_controller.set_extrema(min_setpoint=0.01, max_integral=0.01)
     speed_controller.alpha = 0.01
 
-    # Initialize loop variables:
-    loop_trigger = False
-    leaving_distance = 10.0
-    entering_distance = 4.0
-
     car_controls = airsim.CarControls(moving_car_name)
-    car_data = np.ndarray(shape=(0, 8))
-    start_time = time.perf_counter()
-    last_iteration = start_time
-    sample_time = 0.01
     current_vehicle_positions_lst = []
     current_object_positions_lst = []
     start_time_lst = time.perf_counter()
@@ -60,14 +45,17 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         curr_pos, curr_rot = spatial_utils_v1.extract_pose_from_airsim(vehicle_pose)
         rot_airsim = spatial_utils_v1.extract_rotation_from_airsim(vehicle_pose.orientation)
         current_yaw = rot_airsim[0]
-        current_position_airsim = [vehicle_pose.position.x_val, vehicle_pose.position.y_val, vehicle_pose.position.z_val]
+        current_position_airsim = [vehicle_pose.position.x_val, vehicle_pose.position.y_val,
+                                   vehicle_pose.position.z_val]
         current_position_global = turn_helper_v1.airsim_point_to_global(current_position_airsim)
         current_object_pose_position = client.simGetObjectPose(moving_car_name).position
-        current_object_pose_position = [current_object_pose_position.x_val, current_object_pose_position.y_val, current_object_pose_position.z_val]
-        distance_from_target_point = spatial_utils_v1.calculate_distance_in_2d_from_array(current_position_global, target_point)
+        current_object_pose_position = [current_object_pose_position.x_val, current_object_pose_position.y_val,
+                                        current_object_pose_position.z_val]
+        distance_from_target_point = spatial_utils_v1.calculate_distance_in_2d_from_array(current_position_global,
+                                                                                          target_point)
 
         if now - start_time_lst >= max_run_time:
-            plots_utils_v1.plot_vehicle_relative_path(current_vehicle_positions_lst,moving_car_name)
+            plots_utils_v1.plot_vehicle_relative_path(current_vehicle_positions_lst, moving_car_name)
             return current_vehicle_positions_lst
 
         curr_heading = np.deg2rad(curr_rot[0])
@@ -80,9 +68,7 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         yaw_is_90 = NINETY_YAW_LOW_BOUNDREY <= abs(current_yaw) <= NINETY_YAW_HIGH_BOUNDERY
 
         if distance_from_target_point < 2.0 and (yaw_is_90 or yaw_is_0 or yaw_is_180):
-            car_controls.throttle = 0.2
-            car_controls.steering = 0.0
-            client.setCarControls(car_controls, moving_car_name)
+            set_car_controls_by_name(client, moving_car_name, desired_steer=0.0, throttle=0.2)
 
             t = time.perf_counter()
             while True:
@@ -91,9 +77,8 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
                     print(f"{TIME_TO_KEEP_STRAIGHT_AFTER_TURN} seconds have passed. Exiting the loop.")
                     break
 
-                vehicle_pose = client.simGetVehiclePose(moving_car_name)
-                v_pose_position = vehicle_pose.position
-                current_position_airsim = [v_pose_position.x_val, v_pose_position.y_val, v_pose_position.z_val]
+                vehicle_position = client.simGetVehiclePose(moving_car_name).position
+                current_position_airsim = [vehicle_position.x_val, vehicle_position.y_val, vehicle_position.z_val]
                 current_position_global = turn_helper_v1.airsim_point_to_global(current_position_airsim)
                 current_object_pose_position = client.simGetObjectPose(moving_car_name).position
                 current_object_pose_position = [current_object_pose_position.x_val, current_object_pose_position.y_val,
@@ -105,23 +90,23 @@ def following_loop(client, spline_obj=None, execution_time=None, curr_vel=None, 
         if turn_completed:
             break
 
-        desired_speed, desired_steer = follow_handler.calc_ref_speed_steering(current_position_global, curr_vel, curr_heading)
+        desired_speed, desired_steer = follow_handler.calc_ref_speed_steering(current_position_global, curr_vel,
+                                                                              curr_heading)
         desired_steer /= follow_handler.max_steering
         desired_steer = np.clip(desired_steer, -1, 1)
-        # print(f"desired Steer: {desired_steer}")
-
         shmem_setpoint.buf[:8] = struct.pack('d', desired_steer)
-        real_steer = struct.unpack('d', shmem_output.buf[:8])[0]
-        # print(f"Real Steer: {real_steer}")
+        set_car_controls_by_name(client, moving_car_name, desired_steer)
 
-        car_controls.throttle = 0.4
-        car_controls.steering = desired_steer
-        client.setCarControls(car_controls, moving_car_name)
-
-    plots_utils_v1.plot_vehicle_relative_path(current_vehicle_positions_lst,moving_car_name)
-    # plots_utils.plot_vehicle_object_path(current_object_positions_lst)
-    plots_utils_v1.combine_plot(spline_obj.xi, spline_obj.yi, current_vehicle_positions_lst,moving_car_name)
+    plots_utils_v1.plot_vehicle_relative_path(current_vehicle_positions_lst, moving_car_name)
+    plots_utils_v1.combine_plot(spline_obj.xi, spline_obj.yi, current_vehicle_positions_lst, moving_car_name)
     return current_vehicle_positions_lst
+
+
+def set_car_controls_by_name(airsim_client, car_name, desired_steer, throttle=0.4):
+    car_controls = airsim.CarControls()
+    car_controls.throttle = throttle
+    car_controls.steering = desired_steer
+    airsim_client.setCarControls(car_controls, car_name)
 
 
 def create_spline_object_manually(client):

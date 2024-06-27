@@ -6,8 +6,6 @@ EXPERIMENT_ID = "global_experiment"
 WEIGHTS_TO_SAVE_NAME = "epochs_0_100"
 # LOAD_WEIGHT_DIRECTORY = "experiments/local_experiment/weights/4_forth_left.h5"
 
-# Mode settings
-GLOBAL_EXPERIMENT = False
 
 # Car start positions and orientations
 CAR1_INITIAL_POSITION = [6, 24, 0]

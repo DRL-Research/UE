@@ -14,17 +14,14 @@ from airsim_manager_v1 import AirsimManager
 # Function to initialize setup and return airsim_client
 def initialize_setup():
     setup_manager = SetupManager()
-    setup_manager.extract_cars()
-    setup_manager.enableApiCarsControl()
-    airsim_client = setup_manager.airsim_client
     time.sleep(0.5)
-    airsim_client.confirmConnection()
-    airsim_manager = AirsimManager(airsim_client, setup_manager)
-    return airsim_client, airsim_manager
+    airsim_manager = AirsimManager(setup_manager.airsim_client, setup_manager.cars)
+    return airsim_manager
+
 
 # Function to run the car processing
 def run_for_single_car(moving_car_name):
-    airsim_client, airsim_manager = initialize_setup()
+    airsim_manager = initialize_setup()
 
     # Ensure SteeringProcManager initialization
     path_control_v1.SteeringProcManager.create_steering_procedure()  # Initialize shared memory
@@ -36,7 +33,7 @@ def run_for_single_car(moving_car_name):
         direction = random.choices(directions, k=1)[0]
         # Detect the cones and spline points, and return their location:
         print(f'Starting on-the-fly cone mapping with constant speed and steering procedure for {moving_car_name}.')
-        tracked_points, execution_time, curr_vel, transition_matrix = turn_mapping_v1.mapping_loop(airsim_client,
+        tracked_points, execution_time, curr_vel, transition_matrix = turn_mapping_v1.mapping_loop(airsim_manager.airsim_client,
                                                                                                 moving_car_name,
                                                                                                 direction)
 
@@ -44,20 +41,18 @@ def run_for_single_car(moving_car_name):
 
         # Stop until spline generation is complete:
         print(f'Stopping vehicle {moving_car_name} and generating a path to follow...')
-        car_controls = airsim_client.getCarControls(vehicle_name=moving_car_name)
+        car_controls = airsim_manager.airsim_client.getCarControls(vehicle_name=moving_car_name)
         car_controls.throttle = 0.0
-        airsim_client.setCarControls(car_controls, vehicle_name=moving_car_name)
+        airsim_manager.airsim_client.setCarControls(car_controls, vehicle_name=moving_car_name)
 
-        spline_obj = turn_helper_v1.filter_tracked_points_and_generate_spline(tracked_points, moving_car_name)
+        spline = turn_helper_v1.filter_tracked_points_and_generate_spline(tracked_points, moving_car_name)
 
         # Follow the spline using Stanley's method:
         print(f'Starting variable speed spline following procedure for {moving_car_name}.')
-        positions_lst = path_following_v1.following_loop(airsim_client, spline_obj, execution_time, curr_vel, transition_matrix, moving_car_name=moving_car_name)
+        positions_lst = path_following_v1.following_loop(airsim_manager.airsim_client, spline, execution_time, curr_vel, transition_matrix, moving_car_name=moving_car_name)
 
         print(f'Full process complete for {moving_car_name}! Stopping vehicle.')
-        car_controls.throttle = 0.0
-        car_controls.brake = 1.0
-        airsim_client.setCarControls(car_controls, vehicle_name=moving_car_name)
+        airsim_manager.stop_car(moving_car_name)
         return positions_lst
 
     finally:
@@ -72,8 +67,7 @@ if __name__ == '__main__':
     print("Main thread name: {}".format(threading.current_thread().name))
 
     # Define the car names
-    # moving_car_names = ["Car2","Car3", "Car4"]  # Add more car names as needed
-    moving_car_names = ["Car2", "Car4", "Car3"]#,"Car4"]  # Add more car names as needed
+    moving_car_names = [CAR1_NAME, CAR2_NAME, CAR3_NAME, CAR4_NAME]  # Add more car names as needed
     all_cars_positions_list = []
 
     # Create a process pool

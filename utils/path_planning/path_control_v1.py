@@ -10,20 +10,20 @@ from utils.path_planning.pidf_controller import PidfControl
 class StanleyFollower:
     EPSILON = 1e-4  # For numerical stability
 
-    def __init__(self, path_spline):
+    def __init__(self, path_spline, max_velocity=10, min_velocity=5, lookahead=5.0, k_steer=10.0):
 
         self.path = path_spline
 
         # Max steering MUST be the same as your simulated vehicle's settings within Unreal.
-        self.max_velocity = 10  # m/s
-        self.min_velocity = 5 # m/s
+        self.max_velocity = max_velocity  # m/s
+        self.min_velocity = min_velocity # m/s
         self.max_steering = np.deg2rad(80.0)  # radians
 
         # Velocity coefficient defaults to the difference between max and min speeds,
         # divided by the maximum path curvature:
         self.k_vel = (self.max_velocity - self.min_velocity) / (self.path.curvature.max() + self.EPSILON)
-        self.lookahead = 5.0  # meters
-        self.k_steer = 10.0  # Stanley steering coefficient
+        self.lookahead = lookahead  # meters
+        self.k_steer = k_steer  # Stanley steering coefficient
 
     def calc_ref_speed_steering(self, car_pos, car_vel, heading): ## function to handle the speed and steering
         """
