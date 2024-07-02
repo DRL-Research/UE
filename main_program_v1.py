@@ -29,19 +29,13 @@ def run_for_single_car(moving_car_name):
     path_control_v1.SteeringProcManager.create_steering_procedure()  # Initialize shared memory
 
     try:
-        # Use retrieved shared memories
-        shmem_active, shmem_setpoint, shmem_output = path_control_v1.SteeringProcManager.retrieve_shared_memories()
         directions = [TURN_DIRECTION_STRAIGHT, TURN_DIRECTION_RIGHT, TURN_DIRECTION_LEFT]
         direction = random.choices(directions, k=1)[0]
-        print(f'car name: {moving_car_name}, direction: {direction}')
         # Detect the cones and spline points, and return their location:
-        print(f'Starting on-the-fly cone mapping with constant speed and steering procedure for {moving_car_name}.')
         tracked_points, execution_time, curr_vel, transition_matrix = turn_mapping_v1.mapping_loop(
             airsim_manager.airsim_client,
             moving_car_name,
             direction)
-
-        print(f'Mapping complete for {moving_car_name}!')
 
         # Stop until spline generation is complete:
         print(f'Stopping vehicle {moving_car_name} and generating a path to follow...')
