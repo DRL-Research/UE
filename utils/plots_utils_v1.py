@@ -75,29 +75,62 @@ def combine_plot(xi, yi, points, moving_car_name):
 
 def plot_vehicle_object_path(list_of_points):
     """
-  Plots multiple vehicle paths from a list of lists of points.
+    Plots multiple vehicle paths from a list of lists of points.
 
-  Args:
-      list_of_points: A list of lists, where each inner list represents a vehicle's path
-                      as a series of [x, y] coordinates.
-  """
+    Args:
+        list_of_points: A list of lists, where each inner list represents a vehicle's path
+                        as a series of [x, y] coordinates.
+    """
 
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(10, 10))
     ax = plt.gca()
     ax.invert_yaxis()
 
-    # Define a color list for different vehicles (feel free to customize colors)
-    colors = ['b', 'g', 'r', 'c', 'm']
+    axis1 = [12, 18, 24, 30, 36]
+    axis2 = [12, 12, 12, 12, 12]
+    axis3 = [0, 0, 0, 0, 0]
+    plt.plot(axis1, axis2, linestyle='dashed', color='black', linewidth=2)
+    plt.plot([-x for x in axis1], axis2, linestyle='dashed', color='black', linewidth=2)
+    plt.plot(axis1, [-y for y in axis2], linestyle='dashed', color='black', linewidth=2)
+    plt.plot([-x for x in axis1], [-y for y in axis2], linestyle='dashed', color='black', linewidth=2)
 
+    plt.plot(axis2, axis1, linestyle='dashed', color='black', linewidth=2)
+    plt.plot([-y for y in axis2], axis1, linestyle='dashed', color='black', linewidth=2)
+    plt.plot(axis2, [-x for x in axis1], linestyle='dashed', color='black', linewidth=2)
+    plt.plot([-y for y in axis2], [-x for x in axis1], linestyle='dashed', color='black', linewidth=2)
+
+    plt.plot(axis1, axis3, linestyle='dashed', color='black', linewidth=2)
+    plt.plot([-x for x in axis1], axis3, linestyle='dashed', color='black', linewidth=2)
+    plt.plot(axis3, [-y for y in axis1], linestyle='dashed', color='black', linewidth=2)
+    plt.plot(axis3, axis1, linestyle='dashed', color='black', linewidth=2)
+    # Set the tick marks for both axes at intervals of 6, 12, 18, etc.
+    ax.set_xticks(range(-30, 31, 6))
+    ax.set_yticks(range(-30, 31, 6))
+
+    # Define a color list for different vehicles (feel free to customize colors)
+    colors = ['b', 'g', 'r', 'y']
     # Loop through each list of points and plot them in a different color
-    for i, vehicle_points in enumerate(list_of_points):
+    for vehicle_points, car_name in list_of_points:
         x_coords = [point[0] for point in vehicle_points]
         y_coords = [point[1] for point in vehicle_points]
-        plt.plot(x_coords, y_coords, marker='o', linestyle='-', label=f"Vehicle {i + 1}", color=colors[i % len(colors)])
+        i = int(car_name[-1])
+        if i == 1 or i == 2:
+            x_offset = 0
+            y_offset = 2
+        elif i == 3 :
+            x_offset = 3
+            y_offset = -4
+        else : # i == 4:
+            x_offset = 4
+            y_offset = -4
 
-    plt.title('Vehicle Paths')
+        plt.plot(x_coords, y_coords, marker='o', linestyle='-', label=f" {car_name}", color=colors[i % len(colors)])
+        plt.text(x_coords[0] + x_offset, y_coords[0] + y_offset, f'{car_name} start', fontsize=11,
+                 va='top', ha='right', fontweight='bold')
+        plt.scatter(x_coords[0], y_coords[0], color='black', s=100, zorder=5)
+
+    plt.title('Vehicle Paths - Airsim Coordinates')
     plt.xlabel('X Coordinate')
     plt.ylabel('Y Coordinate')
     plt.legend()  # Add legend to identify vehicle paths
-    plt.grid(True)
     plt.show()
