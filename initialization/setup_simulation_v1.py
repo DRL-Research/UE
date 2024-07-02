@@ -33,18 +33,14 @@ class SetupManager:
         self.extract_cars()
 
     def extract_cars(self):
-        active = [True] * self.n_active_cars
-        inactive = [False] * (self.max_cars_we_can_handle-self.n_active_cars)
-        is_active_per_car = active + inactive
-
         car1 = Car(name=CAR1_NAME, speed=0.0, yaw=CAR1_INITIAL_YAW, initial_position=CAR1_INITIAL_POSITION,
-                   destination=CAR1_DESIRED_POSITION, is_active=is_active_per_car[0])
+                   destination=CAR1_DESIRED_POSITION, is_active=USE_CAR1)
         car2 = Car(name=CAR2_NAME, speed=0.0, yaw=CAR2_INITIAL_YAW, initial_position=CAR2_INITIAL_POSITION,
-                   destination=CAR2_DESIRED_POSITION, is_active=is_active_per_car[1])
+                   destination=CAR2_DESIRED_POSITION, is_active=USE_CAR2)
         car3 = Car(name=CAR3_NAME, speed=0.0, yaw=CAR3_INITIAL_YAW, initial_position=CAR3_INITIAL_POSITION,
-                   destination=CAR3_DESIRED_POSITION, is_active=is_active_per_car[2])
+                   destination=CAR3_DESIRED_POSITION, is_active=USE_CAR3)
         car4 = Car(name=CAR4_NAME, speed=0.0, yaw=CAR4_INITIAL_YAW, initial_position=CAR4_INITIAL_POSITION,
-                   destination=CAR4_DESIRED_POSITION, is_active=is_active_per_car[3])
+                   destination=CAR4_DESIRED_POSITION, is_active=USE_CAR4)
         cars = [car1, car2, car3, car4]
         for car in cars:
             self.cars[car.name] = car

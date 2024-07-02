@@ -36,14 +36,10 @@ def mapping_loop(client, moving_car_name='Car1', direction=None):
     shmem_active, shmem_setpoint, shmem_output = path_control_v1.SteeringProcManager.retrieve_shared_memories()
 
     # Initialize vehicle starting point
-    # spatial_utils.set_airsim_pose(client, [0.0, 0.0], [180.0, 0, 0])
     time.sleep(1.0)
     car_controls = airsim.CarControls()
     car_controls.throttle = 0.2
     client.setCarControls(car_controls, vehicle_name=moving_car_name)
-    start_time = time.perf_counter()
-    last_iteration = start_time
-    sample_time = 0.1
     execution_time = 0.0
     initial_car_position = spatial_utils_v1.get_car_settings_position(client, moving_car_name)
     initial_yaw, vehicle_pose, curr_vel, vehicle_to_map = None, None, None, None

@@ -5,7 +5,6 @@ import threading
 import time
 from initialization.config_v1 import *
 import airsim
-
 from initialization.config_v1 import *
 import plots_utils_v1
 from initialization.setup_simulation_v1 import SetupManager
@@ -14,8 +13,7 @@ from utils.path_planning import path_control_v1, turn_helper_v1
 from airsim_manager_v1 import AirsimManager
 
 
-def run_for_single_car(args):
-    moving_car_name, setup_manager = args[0], args[1]
+def run_for_single_car(moving_car_name, setup_manager):
     airsim_client = airsim.CarClient()
     airsim_manager = AirsimManager(airsim_client, setup_manager.cars)
     # Ensure SteeringProcManager initialization
@@ -55,28 +53,19 @@ def run_for_single_car(args):
 
 if __name__ == '__main__':
     """ Define the cars that will participate in the simulation: """
-    moving_car_names = []
-    names = [CAR1_NAME, CAR2_NAME, CAR3_NAME, CAR4_NAME]
-    uses = [USE_CAR1, USE_CAR2, USE_CAR3, USE_CAR4]
-    for i, use in enumerate(uses):
-        if use:
-            moving_car_names.append(names[i])
-
-    all_cars_positions_list = []
-    # Create a process pool
-    number_of_processes = len(moving_car_names) + 1
     setup_manager = SetupManager()
     time.sleep(0.2)
-    tasks = [(car, setup_manager) for car in moving_car_names]
+    moving_car_names = list(setup_manager.cars.keys())
+    number_of_processes = len(moving_car_names) + 1
+    arguments = [(car_name, setup_manager) for car_name in moving_car_names]
 
     with multiprocessing.Pool(processes=number_of_processes) as pool:
-        # Submit tasks to the process pool
-        results = pool.map(run_for_single_car, tasks)
+        results = pool.starmap(run_for_single_car, arguments)
 
-    # Append results to all_cars_positions_list
+    """ Collect positions for each car """
+    all_cars_positions_list = []
     for result in results:
         all_cars_positions_list.append(result)
-
     # here i want to append the positions_lst that return from run_for_car of each procces to the all_cars_positions_list
     if CREATE_PLOTS:
         plots_utils_v1.plot_vehicle_object_path(all_cars_positions_list)
