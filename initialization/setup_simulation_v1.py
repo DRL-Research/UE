@@ -27,7 +27,6 @@ class CarDict(Dict[str, Car]):
 
 class SetupManager:
     def __init__(self):
-        self.n_active_cars = NUMBER_OF_CAR_IN_SIMULATION
         self.cars = CarDict()
         self.max_cars_we_can_handle = 4
         car1 = Car(name=CAR1_NAME, speed=0.0, yaw=CAR1_INITIAL_YAW, initial_position=CAR1_INITIAL_POSITION,
@@ -40,7 +39,10 @@ class SetupManager:
                    destination=CAR4_DESIRED_POSITION, is_active=USE_CAR4)
         cars = [car1, car2, car3, car4]
         for car in cars:
-            self.cars[car.name] = car
+            if car.is_active:
+                self.cars[car.name] = car
 
         self.cars_names = list(self.cars.keys())
-
+        self.n_active_cars = len(self.cars)
+        if self.n_active_cars != NUMBER_OF_CAR_IN_SIMULATION:
+            raise Exception('MisMatch between the number of cars in the simulation and the number of active cars')

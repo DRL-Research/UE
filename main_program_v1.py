@@ -49,19 +49,20 @@ if __name__ == '__main__':
     cars_names = setup_manager.cars_names
     """ Run Simulation in MultiProcessing """
     number_of_processes = len(cars_names) + 1  # each car will have its own process
-    # NOTE - single airsim manager for all.
+    # NOTE - single airsim manager for all processes.
     airsim_manager = AirsimManager(setup_manager)
     with multiprocessing.Pool(processes=number_of_processes) as pool:
-        results = pool.map(run_for_single_car, cars_names)
+        positions_lists = pool.map(run_for_single_car, cars_names)
 
     simulation_end_time = time.time()
     """ Collect positions for each car """
     all_cars_positions_list = []
-    for result in results:
-        all_cars_positions_list.append(result)
-    # here i want to append the positions_lst that return from run_for_car of each procces to the all_cars_positions_list
+    for positions_list in positions_lists:
+        all_cars_positions_list.append(positions_list)
+
     if CREATE_MAIN_PLOT:
         plots_utils_v1.plot_vehicle_object_path(all_cars_positions_list)
 
-    print(f'Simulation took: {simulation_end_time - simulation_start_time}')
+    simulation_time = round(simulation_end_time - simulation_start_time, 3)
+    print(f'Simulation took: {simulation_time} seconds')
     print('All cars have completed their tasks.')
