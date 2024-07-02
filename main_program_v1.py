@@ -1,9 +1,6 @@
 import multiprocessing
-import os
 import random
-import threading
 import time
-from initialization.config_v1 import *
 import airsim
 from initialization.config_v1 import *
 import plots_utils_v1
@@ -28,7 +25,6 @@ def run_for_single_car(moving_car_name):
             direction)
 
         # Stop until spline generation is complete:
-        print(f'Stopping vehicle {moving_car_name} and generating a path to follow...')
         AirsimManager.stop_car(airsim_client, moving_car_name, 0.1)
         spline = turn_helper_v1.filter_tracked_points_and_generate_spline(tracked_points, moving_car_name)
         # Follow the spline using Stanley's method:
@@ -42,14 +38,12 @@ def run_for_single_car(moving_car_name):
         return positions_lst
 
     finally:
-        # Always clean up after use
-        # path_control.SteeringProcManager.detach_shared_memories() #todo: if its not comment it fucks up the program
-        # path_control.SteeringProcManager.terminate_steering_procedure()
         return positions_lst
 
 
 if __name__ == '__main__':
     """ Define the cars that will participate in the simulation: """
+    simulation_start_time = time.time()
     setup_manager = SetupManager()
     time.sleep(0.2)
     cars_names = setup_manager.cars_names
@@ -60,12 +54,14 @@ if __name__ == '__main__':
     with multiprocessing.Pool(processes=number_of_processes) as pool:
         results = pool.map(run_for_single_car, cars_names)
 
+    simulation_end_time = time.time()
     """ Collect positions for each car """
     all_cars_positions_list = []
     for result in results:
         all_cars_positions_list.append(result)
     # here i want to append the positions_lst that return from run_for_car of each procces to the all_cars_positions_list
-    if CREATE_PLOTS:
+    if CREATE_MAIN_PLOT:
         plots_utils_v1.plot_vehicle_object_path(all_cars_positions_list)
 
+    print(f'Simulation took: {simulation_end_time - simulation_start_time}')
     print('All cars have completed their tasks.')

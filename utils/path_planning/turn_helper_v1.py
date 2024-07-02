@@ -1,3 +1,5 @@
+import logging
+
 import plots_utils_v1
 import spatial_utils_v1
 from initialization.config_v1 import *
@@ -48,8 +50,8 @@ def get_points_for_bezier_curve(client, moving_car_name, initial_yaw, direction)
     destination_point_global_x = destination_point_global[0]
     destination_point_global_y = destination_point_global[1]
     destination_point_global = np.array([destination_point_global_x, destination_point_global_y])
-    print(f"destination from airsim : {destination_point_airsim}")
-    print(f"destination from global : {destination_point_global}")
+    logging.info(f"destination from airsim : {destination_point_airsim}")
+    logging.info(f"destination from global : {destination_point_global}")
 
     control_point_global = airsim_point_to_global(control_point_airsim)
     control_point_global_x = control_point_global[0]
@@ -218,7 +220,6 @@ def filter_tracked_points_and_generate_spline(tracked_points,moving_car_name):
     y = [sublist[1] for sublist in tracked_points[::2]]
     spline_obj = spline_utils_v1.PathSpline(x, y)
     spline_obj.generate_spline(amount=0.1, meters=True, smoothing=1, summation=len(x))
-    print('Done!')
-    if CREATE_PLOTS:
+    if CREATE_SUB_PLOTS:
         plots_utils_v1.plot_the_spline(spline_obj.xi, -1 * spline_obj.yi,moving_car_name)
     return spline_obj

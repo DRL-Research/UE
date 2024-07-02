@@ -1,3 +1,5 @@
+import logging
+
 import plots_utils_v1
 from utils.path_planning.spline_utils_v1 import PathSpline
 import airsim
@@ -55,7 +57,7 @@ def following_loop(client, spline=None, execution_time=None, curr_vel=None,
                                                                                           target_point)
 
         if now - start_time_lst >= max_run_time:
-            if CREATE_PLOTS:
+            if CREATE_SUB_PLOTS:
                 plots_utils_v1.plot_vehicle_relative_path(current_vehicle_positions_lst, moving_car_name)
             return current_object_positions_lst
 
@@ -75,7 +77,7 @@ def following_loop(client, spline=None, execution_time=None, curr_vel=None,
             while True:
                 time_passed = time.perf_counter() - t
                 if time_passed > TIME_TO_KEEP_STRAIGHT_AFTER_TURN:
-                    print(f"{TIME_TO_KEEP_STRAIGHT_AFTER_TURN} seconds have passed. Exiting the loop.")
+                    logging.info(f"{TIME_TO_KEEP_STRAIGHT_AFTER_TURN} seconds have passed. Exiting the loop.")
                     break
 
                 vehicle_position = client.simGetVehiclePose(moving_car_name).position
@@ -97,7 +99,7 @@ def following_loop(client, spline=None, execution_time=None, curr_vel=None,
         desired_steer = np.clip(desired_steer, -1, 1)
         shmem_setpoint.buf[:8] = struct.pack('d', desired_steer)
         set_car_controls_by_name(client, moving_car_name, desired_steer)
-    if CREATE_PLOTS:
+    if CREATE_SUB_PLOTS:
         plots_utils_v1.plot_vehicle_relative_path(current_vehicle_positions_lst, moving_car_name)
         plots_utils_v1.combine_plot(spline.xi, spline.yi, current_vehicle_positions_lst, moving_car_name)
     return current_object_positions_lst

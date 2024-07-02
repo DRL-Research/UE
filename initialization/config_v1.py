@@ -1,7 +1,8 @@
 from datetime import datetime
 import numpy as np
 
-CREATE_PLOTS = True
+CREATE_SUB_PLOTS = False
+CREATE_MAIN_PLOT = True
 
 # Path definition
 EXPERIMENT_ID = "global_experiment"
