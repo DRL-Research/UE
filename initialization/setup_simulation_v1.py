@@ -29,7 +29,6 @@ class SetupManager:
     def __init__(self):
         self.n_active_cars = NUMBER_OF_CAR_IN_SIMULATION
         self.cars = CarDict()
-        self.airsim_client = airsim.CarClient()
         self.max_cars_we_can_handle = 4
         self.extract_cars()
 

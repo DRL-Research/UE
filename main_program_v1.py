@@ -14,17 +14,10 @@ from utils.path_planning import path_control_v1, turn_helper_v1
 from airsim_manager_v1 import AirsimManager
 
 
-# Function to initialize setup and return airsim_client
-def initialize_setup():
-    setup_manager = SetupManager()
-    time.sleep(0.5)
-    airsim_manager = AirsimManager(setup_manager.airsim_client, setup_manager.cars)
-    return airsim_manager
-
-
-# Function to run the car processing
-def run_for_single_car(moving_car_name):
-    airsim_manager = initialize_setup()
+def run_for_single_car(args):
+    moving_car_name, setup_manager = args[0], args[1]
+    airsim_client = airsim.CarClient()
+    airsim_manager = AirsimManager(airsim_client, setup_manager.cars)
     # Ensure SteeringProcManager initialization
     path_control_v1.SteeringProcManager.create_steering_procedure()  # Initialize shared memory
 
@@ -33,7 +26,7 @@ def run_for_single_car(moving_car_name):
         direction = random.choices(directions, k=1)[0]
         # Detect the cones and spline points, and return their location:
         tracked_points, execution_time, curr_vel, transition_matrix = turn_mapping_v1.mapping_loop(
-            airsim_manager.airsim_client,
+            airsim_client,
             moving_car_name,
             direction)
 
@@ -45,7 +38,7 @@ def run_for_single_car(moving_car_name):
 
         # Follow the spline using Stanley's method:
         print(f'Starting variable speed spline following procedure for {moving_car_name}.')
-        positions_lst = path_following_v1.following_loop(airsim_manager.airsim_client, spline, execution_time, curr_vel,
+        positions_lst = path_following_v1.following_loop(airsim_client, spline, execution_time, curr_vel,
                                                          transition_matrix, moving_car_name=moving_car_name)
 
         print(f'Full process complete for {moving_car_name}! Stopping vehicle.')
@@ -72,9 +65,13 @@ if __name__ == '__main__':
     all_cars_positions_list = []
     # Create a process pool
     number_of_processes = len(moving_car_names) + 1
+    setup_manager = SetupManager()
+    time.sleep(0.2)
+    tasks = [(car, setup_manager) for car in moving_car_names]
+
     with multiprocessing.Pool(processes=number_of_processes) as pool:
         # Submit tasks to the process pool
-        results = pool.map(run_for_single_car, moving_car_names)
+        results = pool.map(run_for_single_car, tasks)
 
     # Append results to all_cars_positions_list
     for result in results:
