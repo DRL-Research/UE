@@ -114,14 +114,17 @@ def plot_vehicle_object_path(list_of_points):
         x_coords = [point[0] for point in vehicle_points]
         y_coords = [point[1] for point in vehicle_points]
         i = int(car_name[-1])
-        if i == 1 or i == 2:
+        if i == 1 :
+            x_offset = 4
+            y_offset = 3
+        elif i == 2:
             x_offset = 0
             y_offset = 2
         elif i == 3 :
-            x_offset = 3
+            x_offset = 5
             y_offset = -4
         else : # i == 4:
-            x_offset = 4
+            x_offset = 5
             y_offset = -4
 
         plt.plot(x_coords, y_coords, marker='o', linestyle='-', label=f" {car_name}", color=colors[i % len(colors)])
