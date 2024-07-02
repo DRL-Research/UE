@@ -57,8 +57,8 @@ if __name__ == '__main__':
     simulation_end_time = time.time()
     """ Collect positions for each car """
     all_cars_positions_list = []
-    for postions_lst, car_name in car_location_by_name:
-        all_cars_positions_list.append((postions_lst, car_name))
+    for positions_lst, car_name in car_location_by_name:
+        all_cars_positions_list.append((positions_lst, car_name))
     # here i want to append the positions_lst that return from run_for_car of each procces to the all_cars_positions_list
     if CREATE_MAIN_PLOT:
         plots_utils_v1.plot_vehicle_object_path(all_cars_positions_list)

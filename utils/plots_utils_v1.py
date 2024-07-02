@@ -99,10 +99,10 @@ def plot_vehicle_object_path(list_of_points):
     plt.plot(axis2, [-x for x in axis1], linestyle='dashed', color='black', linewidth=2)
     plt.plot([-y for y in axis2], [-x for x in axis1], linestyle='dashed', color='black', linewidth=2)
 
-    plt.plot(axis1, axis3, linestyle='dashed', color='black', linewidth=2)
-    plt.plot([-x for x in axis1], axis3, linestyle='dashed', color='black', linewidth=2)
-    plt.plot(axis3, [-y for y in axis1], linestyle='dashed', color='black', linewidth=2)
-    plt.plot(axis3, axis1, linestyle='dashed', color='black', linewidth=2)
+    plt.plot(axis1, axis3, linestyle='dashed', color='dimgray', linewidth=2)
+    plt.plot([-x for x in axis1], axis3, linestyle='dashed', color='dimgray', linewidth=2)
+    plt.plot(axis3, [-y for y in axis1], linestyle='dashed', color='dimgray', linewidth=2)
+    plt.plot(axis3, axis1, linestyle='dashed', color='dimgray', linewidth=2)
     # Set the tick marks for both axes at intervals of 6, 12, 18, etc.
     ax.set_xticks(range(-30, 31, 6))
     ax.set_yticks(range(-30, 31, 6))
