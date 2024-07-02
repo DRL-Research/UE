@@ -1,6 +1,8 @@
 from datetime import datetime
 import numpy as np
 
+CREATE_PLOTS = True
+
 # Path definition
 EXPERIMENT_ID = "global_experiment"
 WEIGHTS_TO_SAVE_NAME = "epochs_0_100"
@@ -35,9 +37,13 @@ EXPERIMENT_DATE_TIME = datetime.now().strftime("%d_%m_%Y-%H_%M_%S")
 NUMBER_OF_CAR_IN_SIMULATION = 4
 
 CAR1_NAME = "Car1"
+USE_CAR1 = True
 CAR2_NAME = "Car2"
+USE_CAR2 = True
 CAR3_NAME = "Car3"
+USE_CAR3 = True
 CAR4_NAME = "Car4"
+USE_CAR4 = True
 
 REACHED_TARGET_REWARD = 1000
 COLLISION_REWARD = -1000

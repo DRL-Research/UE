@@ -55,7 +55,8 @@ def following_loop(client, spline=None, execution_time=None, curr_vel=None,
                                                                                           target_point)
 
         if now - start_time_lst >= max_run_time:
-            plots_utils_v1.plot_vehicle_relative_path(current_vehicle_positions_lst, moving_car_name)
+            if CREATE_PLOTS:
+                plots_utils_v1.plot_vehicle_relative_path(current_vehicle_positions_lst, moving_car_name)
             return current_object_positions_lst
 
         curr_heading = np.deg2rad(curr_rot[0])
@@ -96,9 +97,9 @@ def following_loop(client, spline=None, execution_time=None, curr_vel=None,
         desired_steer = np.clip(desired_steer, -1, 1)
         shmem_setpoint.buf[:8] = struct.pack('d', desired_steer)
         set_car_controls_by_name(client, moving_car_name, desired_steer)
-
-    plots_utils_v1.plot_vehicle_relative_path(current_vehicle_positions_lst, moving_car_name)
-    plots_utils_v1.combine_plot(spline.xi, spline.yi, current_vehicle_positions_lst, moving_car_name)
+    if CREATE_PLOTS:
+        plots_utils_v1.plot_vehicle_relative_path(current_vehicle_positions_lst, moving_car_name)
+        plots_utils_v1.combine_plot(spline.xi, spline.yi, current_vehicle_positions_lst, moving_car_name)
     return current_object_positions_lst
 
 
