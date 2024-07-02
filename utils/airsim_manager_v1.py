@@ -1,15 +1,15 @@
 from initialization.config_v1 import *
 import airsim
-from initialization.setup_simulation_v1 import CarDict
+from initialization.setup_simulation_v1 import SetupManager
 
 
 class AirsimManager:
 
-    def __init__(self, airsim_client, cars: CarDict):
-        self.airsim_client = airsim_client
+    def __init__(self, setup_manager: SetupManager):
+        self.airsim_client = airsim.CarClient()
         self.airsim_client.confirmConnection()  # Confirm the connection to the AirSim simulator
         self.car_name_to_offset = {}
-        self.cars = cars
+        self.cars = setup_manager.cars
         self.enable_api_cars_control()
 
         # Set cars throttle to 1:
@@ -73,13 +73,13 @@ class AirsimManager:
         # Set initial position and yaw of Car4
         self.set_initial_position_and_yaw(car_name=CAR4_NAME, start_location_x=car4_start_location_x,
                                           start_location_y=car4_start_location_y, car_start_yaw=CAR4_INITIAL_YAW)
-
-    def stop_car(self, moving_car_name, throttle=0.0):
+    @staticmethod
+    def stop_car(airsim_client, moving_car_name, throttle=0.0):
         car_controls = airsim.CarControls()
         car_controls.throttle = throttle
         if throttle > 0:
             car_controls.brake = 1.0
-        self.airsim_client.setCarControls(car_controls, vehicle_name=moving_car_name)
+        airsim_client.setCarControls(car_controls, vehicle_name=moving_car_name)
 
     def collision_occurred(self):
         collision_info = self.airsim_client.simGetCollisionInfo()

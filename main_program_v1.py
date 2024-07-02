@@ -13,12 +13,11 @@ from utils.path_planning import path_control_v1, turn_helper_v1
 from airsim_manager_v1 import AirsimManager
 
 
-def run_for_single_car(moving_car_name, setup_manager):
+def run_for_single_car(moving_car_name):
     airsim_client = airsim.CarClient()
-    airsim_manager = AirsimManager(airsim_client, setup_manager.cars)
-    # Ensure SteeringProcManager initialization
+    # Note Our Line of Code: Ensure SteeringProcManager initialization
     path_control_v1.SteeringProcManager.create_steering_procedure()  # Initialize shared memory
-
+    positions_lst = []
     try:
         directions = [TURN_DIRECTION_STRAIGHT, TURN_DIRECTION_RIGHT, TURN_DIRECTION_LEFT]
         direction = random.choices(directions, k=1)[0]
@@ -30,17 +29,15 @@ def run_for_single_car(moving_car_name, setup_manager):
 
         # Stop until spline generation is complete:
         print(f'Stopping vehicle {moving_car_name} and generating a path to follow...')
-        airsim_manager.stop_car(moving_car_name, 0.1)
-
+        AirsimManager.stop_car(airsim_client, moving_car_name, 0.1)
         spline = turn_helper_v1.filter_tracked_points_and_generate_spline(tracked_points, moving_car_name)
-
         # Follow the spline using Stanley's method:
         print(f'Starting variable speed spline following procedure for {moving_car_name}.')
         positions_lst = path_following_v1.following_loop(airsim_client, spline, execution_time, curr_vel,
                                                          transition_matrix, moving_car_name=moving_car_name)
 
         print(f'Full process complete for {moving_car_name}! Stopping vehicle.')
-        airsim_manager.stop_car(moving_car_name)
+        AirsimManager.stop_car(airsim_client, moving_car_name)
 
         return positions_lst
 
@@ -55,12 +52,13 @@ if __name__ == '__main__':
     """ Define the cars that will participate in the simulation: """
     setup_manager = SetupManager()
     time.sleep(0.2)
-    moving_car_names = list(setup_manager.cars.keys())
-    number_of_processes = len(moving_car_names) + 1
-    arguments = [(car_name, setup_manager) for car_name in moving_car_names]
-
+    cars_names = setup_manager.cars_names
+    """ Run Simulation in MultiProcessing """
+    number_of_processes = len(cars_names) + 1  # each car will have its own process
+    # NOTE - single airsim manager for all.
+    airsim_manager = AirsimManager(setup_manager)
     with multiprocessing.Pool(processes=number_of_processes) as pool:
-        results = pool.starmap(run_for_single_car, arguments)
+        results = pool.map(run_for_single_car, cars_names)
 
     """ Collect positions for each car """
     all_cars_positions_list = []

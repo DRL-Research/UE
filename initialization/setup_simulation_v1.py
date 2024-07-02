@@ -30,9 +30,6 @@ class SetupManager:
         self.n_active_cars = NUMBER_OF_CAR_IN_SIMULATION
         self.cars = CarDict()
         self.max_cars_we_can_handle = 4
-        self.extract_cars()
-
-    def extract_cars(self):
         car1 = Car(name=CAR1_NAME, speed=0.0, yaw=CAR1_INITIAL_YAW, initial_position=CAR1_INITIAL_POSITION,
                    destination=CAR1_DESIRED_POSITION, is_active=USE_CAR1)
         car2 = Car(name=CAR2_NAME, speed=0.0, yaw=CAR2_INITIAL_YAW, initial_position=CAR2_INITIAL_POSITION,
@@ -44,3 +41,6 @@ class SetupManager:
         cars = [car1, car2, car3, car4]
         for car in cars:
             self.cars[car.name] = car
+
+        self.cars_names = list(self.cars.keys())
+
