@@ -1,3 +1,4 @@
+import spatial_utils_v0
 from utils.perception import camera_utils
 from utils.path_planning import path_control_v1, turn_helper_v1
 from perception.car_mapping_v1 import *
@@ -47,6 +48,16 @@ def mapping_loop(client, moving_car_name='Car1', direction=None):
     reached_start_turning_point = DISTANCE_BEFORE_START_TURNING > distance_from_initial_position
     while not reached_start_turning_point:
         vehicle_pose = client.simGetVehiclePose(moving_car_name)
+        if CAR_DETECTION:
+            point_cloud, curr_vel, lidar_to_map = get_args_for_car_detection(client, moving_car_name, vehicle_pose, lidar_to_vehicle)
+            # NOTE - to compare the results, in the other car name arg you must enter the other car name that you wish to find
+            car_detection(airsim_client=client,
+                          points_cloud=point_cloud,
+                          lidar_to_map=lidar_to_map,
+                          execution_time=execution_time,
+                          velocity=curr_vel,
+                          other_car_name=CAR3_NAME)
+
         vehicle_to_map = spatial_utils_v1.tf_matrix_from_airsim_object(vehicle_pose)
         car_state = client.getCarState()
         curr_vel = car_state.speed
@@ -65,3 +76,13 @@ def mapping_loop(client, moving_car_name='Car1', direction=None):
     except:
         raise Exception("Turn Mapping Problem")
 
+
+def get_args_for_car_detection(client, moving_car_name, vehicle_pose, lidar_to_vehicle):
+    vehicle_to_map = spatial_utils_v0.tf_matrix_from_airsim_object(vehicle_pose)
+    lidar_to_map = np.matmul(vehicle_to_map, lidar_to_vehicle)
+    car_state = client.getCarState(vehicle_name=moving_car_name)
+    curr_vel = car_state.speed
+    lidar_data = client.getLidarData()
+    pointcloud = np.array(lidar_data.point_cloud, dtype=np.dtype('f4'))
+    pointcloud = pointcloud.reshape((int(pointcloud.shape[0] / 3), 3))
+    return pointcloud, curr_vel, lidar_to_map

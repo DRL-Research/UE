@@ -35,11 +35,13 @@ class AirsimManager:
                 self.airsim_client.enableApiControl(is_enabled=True, vehicle_name=car.name)
 
     def get_start_location(self, car_name, side=None):
-        car = self.cars[car_name]
-        car_offset_x = self.car_name_to_offset[car_name]['x_offset']
-        car_offset_y = self.car_name_to_offset[car_name]['y_offset']
-        car_start_location_x = car.get_start_location_x(car_offset_x)
-        car_start_location_y = car.get_start_location_y(car_offset_y, side)
+        car_start_location_x, car_start_location_y = None, None
+        if self.cars.get(car_name):
+            car = self.cars[car_name]
+            car_offset_x = self.car_name_to_offset[car_name]['x_offset']
+            car_offset_y = self.car_name_to_offset[car_name]['y_offset']
+            car_start_location_x = car.get_start_location_x(car_offset_x)
+            car_start_location_y = car.get_start_location_y(car_offset_y, side)
         return car_start_location_x, car_start_location_y
 
     def reset_cars_to_initial_positions(self):
@@ -62,16 +64,20 @@ class AirsimManager:
             self.airsim_client.simSetVehiclePose(reference_position, True, car_name)
 
         # Set initial position and yaw of Car1
-        self.set_initial_position_and_yaw(car_name=CAR1_NAME, start_location_x=car1_start_location_x,
+        if self.cars.get(CAR1_NAME):
+            self.set_initial_position_and_yaw(car_name=CAR1_NAME, start_location_x=car1_start_location_x,
                                           start_location_y=car1_start_location_y, car_start_yaw=CAR1_INITIAL_YAW)
         # Set initial position and yaw of Car2
-        self.set_initial_position_and_yaw(car_name=CAR2_NAME, start_location_x=car2_start_location_x,
+        if self.cars.get(CAR2_NAME):
+            self.set_initial_position_and_yaw(car_name=CAR2_NAME, start_location_x=car2_start_location_x,
                                           start_location_y=car2_start_location_y, car_start_yaw=CAR2_INITIAL_YAW)
         # Set initial position and yaw of Car3
-        self.set_initial_position_and_yaw(car_name=CAR3_NAME, start_location_x=car3_start_location_x,
+        if self.cars.get(CAR3_NAME):
+            self.set_initial_position_and_yaw(car_name=CAR3_NAME, start_location_x=car3_start_location_x,
                                           start_location_y=car3_start_location_y, car_start_yaw=CAR3_INITIAL_YAW)
         # Set initial position and yaw of Car4
-        self.set_initial_position_and_yaw(car_name=CAR4_NAME, start_location_x=car4_start_location_x,
+        if self.cars.get(CAR4_NAME):
+            self.set_initial_position_and_yaw(car_name=CAR4_NAME, start_location_x=car4_start_location_x,
                                           start_location_y=car4_start_location_y, car_start_yaw=CAR4_INITIAL_YAW)
     @staticmethod
     def stop_car(airsim_client, moving_car_name, throttle=0.0):
