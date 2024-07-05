@@ -35,10 +35,10 @@ def run_for_single_car(moving_car_name):
         print(f'Full process complete for {moving_car_name}! Stopping vehicle.')
         AirsimManager.stop_car(airsim_client, moving_car_name)
 
-        return positions_lst
+        return positions_lst, moving_car_name
 
     finally:
-        return positions_lst
+        return positions_lst, moving_car_name
 
 
 if __name__ == '__main__':
@@ -52,14 +52,14 @@ if __name__ == '__main__':
     # NOTE - single airsim manager for all processes.
     airsim_manager = AirsimManager(setup_manager)
     with multiprocessing.Pool(processes=number_of_processes) as pool:
-        positions_lists = pool.map(run_for_single_car, cars_names)
+        car_location_by_name = pool.map(run_for_single_car, cars_names)
 
     simulation_end_time = time.time()
     """ Collect positions for each car """
     all_cars_positions_list = []
-    for positions_list in positions_lists:
-        all_cars_positions_list.append(positions_list)
-
+    for positions_lst, car_name in car_location_by_name:
+        all_cars_positions_list.append((positions_lst, car_name))
+    # here i want to append the positions_lst that return from run_for_car of each procces to the all_cars_positions_list
     if CREATE_MAIN_PLOT:
         plots_utils_v1.plot_vehicle_object_path(all_cars_positions_list)
 
