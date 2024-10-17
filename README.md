@@ -2,9 +2,11 @@
 ## Introduction
 This repository holds an Airsim-based client for simulating the FSAE challenge within Unreal Engine.  
 It was created in 2021, hence is relevant for the challenge made in that year.  
-The scripts were tested on Windows 10, using Python 3.9, Airsim 1.5.0 and Unreal Engine 4.26.2.  
+The scripts were tested on Windows 10, using Python 3.11, Airsim 1.5.0 and Unreal Engine 4.26.2.  
 Testing on newer versions of Airsim produces an error in the simGetImages function, which may be solvable.  
 For (much) more details, please review the project PDF file included in the repo.  
+
+### Pay attention to mark utils folder as Sources root
 
 ## Preparation
 In order to install and use this project, you should:  
