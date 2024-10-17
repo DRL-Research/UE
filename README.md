@@ -7,7 +7,7 @@ Testing on newer versions of Airsim produces an error in the simGetImages functi
 For (much) more details, please review the project PDF file included in the repo.  
 
 ### Pay attention to mark utils folder as Sources root
-
+ 
 ## Preparation
 In order to install and use this project, you should:  
 * Install Unreal Engine 4.26.2 using formal instructions.
